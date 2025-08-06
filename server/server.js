@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+require('dotenv').config(); 
 
 const app = express();
 const PORT = 5000;
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use(express.json());
 
 // MongoDB connection (replace with your actual string)
-mongoose.connect('mongodb+srv://admin:cnCyba@cluster0.bmhlhmu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
@@ -27,6 +28,7 @@ mongoose.connect('mongodb+srv://admin:cnCyba@cluster0.bmhlhmu.mongodb.net/?retry
 .catch((err) => {
     console.error("MongoDB connection error:", err);
 });
+
 
 
 // Schema
