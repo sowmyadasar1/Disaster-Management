@@ -92,5 +92,5 @@ npm start
 
 ## Author
 **Sowmya Dasari**
-[GitHub](https://github.com/sowmyadasar1) | [LinkedIn](https://linkedin.com/in/sowmyadasari1) | [Gmail](sowmyaxdasari@gmail.com)
+[GitHub](https://github.com/sowmyadasar1) | [LinkedIn](https://linkedin.com/in/sowmyadasari1) | [Gmail](mailto:sowmyaxdasari@gmail.com)
 
