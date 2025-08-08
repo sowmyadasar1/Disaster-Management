@@ -1,84 +1,40 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config(); 
+const dotenv = require('dotenv');
+const messageRoutes = require('./routes/messageRoutes');
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const connectDB = require('./config/db');
 
+// Load environment variables
+dotenv.config();
+
+// Initialize express app
 const app = express();
-const PORT = 5000;
 
-// Enable CORS
-app.use(cors({
-  origin: 'http://localhost:3000'
-}));
-
-// Parse JSON
+// Middleware
+app.use(cors());
 app.use(express.json());
-
-// Middlewares
-app.use(express.json());
-
-// MongoDB connection (replace with your actual string)
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => {
-    console.log("MongoDB connected successfully.");
-})
-.catch((err) => {
-    console.error("MongoDB connection error:", err);
-});
-
-
-
-// Schema
-const messageSchema = new mongoose.Schema({
-    name: String,
-    location: String,
-    message: String,
-    time: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-const Message = mongoose.model('Message', messageSchema);
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.post('/send-message', async (req, res) => {
-    try {
-        const { name, location, message } = req.body;
+app.use('/api/messages', messageRoutes);
 
-        // Basic validation
-        if (!name || !location || !message) {
-            return res.status(400).send('All fields are required');
-        }
-
-        const newMsg = new Message({ name, location, message });
-        await newMsg.save();
-        res.status(200).send('Message stored successfully');
-    } catch (error) {
-        console.error('Error in /send-message:', error);
-        res.status(500).send('Server Error');
-    }
+// Default route
+app.get('/', (req, res) => {
+  res.send('API is running...');
 });
 
+// Error handling middleware (always after routes)
+app.use(notFound);
+app.use(errorHandler);
 
-//Error logger
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
+// Start server after DB connection
+const PORT = process.env.PORT || 5000;
 
-app.get('/messages', async (req, res) => {
-    try {
-        const messages = await Message.find().sort({ time: -1 });
-        res.json(messages);
-    } catch (error) {
-        res.status(500).send('Server Error');
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+//connect to DB
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 });
