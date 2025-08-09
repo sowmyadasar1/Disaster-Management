@@ -1,15 +1,16 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const messageRoutes = require('./routes/messageRoutes');
+const admin = require('firebase-admin');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-const connectDB = require('./config/db');
 
-// Load environment variables
-dotenv.config();
+// Firebase Admin SDK initialization
+const serviceAccount = require('./firebaseServiceKey.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
-// Initialize express app
+const db = admin.firestore();
+
 const app = express();
 
 // Middleware
@@ -18,23 +19,47 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/messages', messageRoutes);
-
-// Default route
-app.get('/', (req, res) => {
-  res.send('API is running...');
+app.post('/api/messages', async (req, res) => {
+  try {
+    const { name, location, message } = req.body;
+    await db.collection('disasterReports').add({
+      name,
+      location,
+      message,
+      createdAt: new Date(),
+    });
+    res.status(201).json({ message: 'Message saved to Firestore' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// Error handling middleware (always after routes)
+app.get('/api/messages', async (req, res) => {
+  try {
+    const snapshot = await db
+      .collection('disasterReports')
+      .orderBy('createdAt', 'desc')
+      .get();
+    const messages = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send('API is running with Firebase...');
+});
+
+// Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server after DB connection
+// Start server
 const PORT = process.env.PORT || 5000;
-
-//connect to DB
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

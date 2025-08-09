@@ -1,1 +1,3 @@
-.env
+client/.env
+client/.env.local
+server/.firebaseServiceKey
