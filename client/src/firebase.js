@@ -1,10 +1,6 @@
-// firebase.js
+// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
-  RecaptchaVerifier, 
-  signInWithPhoneNumber 
-} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -18,15 +14,11 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-console.log("Firebase API Key:", process.env.REACT_APP_FIREBASE_API_KEY);
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Services
-const auth = getAuth(app);         // For login/signup (optional)
-const db = getFirestore(app);      // For Firestore (messages, users, etc.)
-const storage = getStorage(app);   // For image/video uploads
+// Export initialized services — **auth must be exported** and used by components
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-// Export everything needed for OTP
-export { auth, db, storage, RecaptchaVerifier, signInWithPhoneNumber };
+export { app, auth, db, storage };

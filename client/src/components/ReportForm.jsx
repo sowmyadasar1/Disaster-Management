@@ -1,24 +1,22 @@
-// src/components/ReportForm.jsx
 import React, { useState } from "react";
 import { sendReport } from "../utils/sendReport";
 import { uploadImage } from "../utils/uploadImage";
 import "./ReportForm.css";
 
-/**
- * Disaster Report Form Component
- * Handles report creation with optional image upload
- */
-const ReportForm = () => {
+const ReportForm = ({ formData: initialData }) => {
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
-    message: "",
-    imageFile: null,
+    name: initialData?.name || "",
+    contact: initialData?.phone || "",
+    location: initialData?.location || "",
+    description: initialData?.description || "",
+    incidentType: initialData?.disasterType || "",
+    imageFile: initialData?.image || null,
+    verified: true // OTP passed
   });
+
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData((prev) => ({
@@ -27,7 +25,18 @@ const ReportForm = () => {
     }));
   };
 
-  // Handle form submission
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      contact: "",
+      location: "",
+      description: "",
+      incidentType: "",
+      imageFile: null,
+      verified: true
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -35,8 +44,6 @@ const ReportForm = () => {
 
     try {
       let imageUrl = null;
-
-      // Upload image if provided
       if (formData.imageFile) {
         const uploadResult = await uploadImage(formData.imageFile);
         if (!uploadResult.success) {
@@ -45,18 +52,19 @@ const ReportForm = () => {
         imageUrl = uploadResult.url;
       }
 
-      // Send report to Firestore
       await sendReport({
         name: formData.name.trim(),
+        contact: formData.contact,
         location: formData.location.trim(),
-        message: formData.message.trim(),
+        description: formData.description.trim(),
+        incidentType: formData.incidentType,
         imageUrl,
+        verified: formData.verified,
+        createdAt: new Date()
       });
 
       setFeedback({ type: "success", message: "✅ Report submitted successfully!" });
-
-      // Reset form
-      setFormData({ name: "", location: "", message: "", imageFile: null });
+      resetForm();
     } catch (error) {
       console.error("❌ Report submission error:", error);
       setFeedback({
@@ -83,6 +91,28 @@ const ReportForm = () => {
 
       <input
         type="text"
+        name="contact"
+        placeholder="Contact Number"
+        value={formData.contact}
+        disabled
+      />
+
+      <select
+        name="incidentType"
+        value={formData.incidentType}
+        onChange={handleChange}
+        required
+      >
+        <option value="">Select Disaster Type</option>
+        <option value="Flood">Flood</option>
+        <option value="Fire">Fire</option>
+        <option value="Earthquake">Earthquake</option>
+        <option value="Accident">Accident</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <input
+        type="text"
         name="location"
         placeholder="Location"
         value={formData.location}
@@ -91,10 +121,10 @@ const ReportForm = () => {
       />
 
       <textarea
-        name="message"
+        name="description"
         placeholder="Describe the situation"
         rows="4"
-        value={formData.message}
+        value={formData.description}
         onChange={handleChange}
         required
       />
@@ -111,11 +141,7 @@ const ReportForm = () => {
       </button>
 
       {feedback.message && (
-        <div
-          className={`message-box ${
-            feedback.type === "error" ? "error" : "success"
-          }`}
-        >
+        <div className={`message-box ${feedback.type === "error" ? "error" : "success"}`}>
           {feedback.message}
         </div>
       )}

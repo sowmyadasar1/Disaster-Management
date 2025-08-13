@@ -1,49 +1,28 @@
 // src/App.js
-import React, { useState } from "react";
-import ReportForm from "./components/ReportForm";
+import React from "react";
+import ReportIncident from "./ReportIncident"; // This is the merged form + OTP flow
 import ReportList from "./components/ReportList";
-import OtpVerification from "./OTPVerification";
+//import TestOTP from "./TestOTP";
+
 
 function App() {
-  const [isVerified, setIsVerified] = useState(false);
-  const [contactNumber, setContactNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleVerification = (number) => {
-    setLoading(true);
-    // Simulate a short transition delay for UX smoothness
-    setTimeout(() => {
-      setIsVerified(true);
-      setContactNumber(number);
-      setLoading(false);
-    }, 500);
-  };
-
   return (
     <main className="app-container">
-      {!isVerified ? (
-        <section className="otp-section">
-          <h1 className="app-title">Disaster Management System</h1>
-          <p className="app-subtitle">
-            Please verify your contact number to submit or view disaster reports.
-          </p>
-          <OtpVerification onVerified={handleVerification} />
-        </section>
-      ) : loading ? (
-        <div className="loading-screen">
-          <div className="spinner"></div>
-          <p>Loading reports...</p>
-        </div>
-      ) : (
-        <section className="report-section">
-          <h1 className="app-title">Report a Disaster</h1>
-          <ReportForm contact={contactNumber} />
-          <hr className="section-divider" />
-          <ReportList />
-        </section>
-      )}
+      <section className="report-section">
+        <h1 className="app-title">Disaster Management System</h1>
+        <p className="app-subtitle">
+          Report a disaster and help authorities respond quickly.
+        </p>
+
+        {/* Single component handles form + OTP */}
+        <ReportIncident />
+
+        <hr className="section-divider" />
+        <ReportList />
+      </section>
     </main>
   );
+  //return <TestOTP />;
 }
 
 export default App;
