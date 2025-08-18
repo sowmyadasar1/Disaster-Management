@@ -4,13 +4,15 @@ import ReportForm from "./components/ReportForm";
 import ReportList from "./components/ReportList";
 import LiveMap from "./components/LiveMap";
 import "./App.css";
+import "leaflet/dist/leaflet.css";
+
 
 export default function App() {
   return (
     <div className="app-container">
       {/* Header */}
       <header className="header-section">
-        <h1 className="app-title">THE DISASTER LEDGER</h1>
+        <h1 className="app-title">The Disaster Ledger</h1>
         <p className="app-subtitle">Tracking Emergencies Across India</p>
       </header>
 

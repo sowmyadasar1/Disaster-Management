@@ -5,13 +5,13 @@ body, html, #root {
   padding: 0;
   height: 100%;
   font-family: sans-serif;
-  background-color: #f7f7f7; /* light background */
+  background-color: #fffcfd; /* light background */
   color: #222; /* text color */
 }
 
 
 .app-container {
-  font-family: "Times New Roman", serif;
+  font-family: "Book Antiqua", Palatino, serif;
   padding: 2rem;
 }
 
@@ -21,20 +21,21 @@ body, html, #root {
 }
 
 .app-title {
-  font-size: 2rem;
+  font-size: 4rem;
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
 .app-subtitle {
-  font-size: 1.8rem;
+  font-size: 2.8rem;
   color: #000000;
+  margin: 0;
 }
 
 .section-divider {
   border: none;
   height: 1px;
-  background-color: #e5e7eb;
+  background-color: #000000;
   margin: 2rem 0;
 }
 
@@ -51,7 +52,7 @@ body, html, #root {
 
 .vertical-divider {
   background-color: #e5e7eb;
-  width: 1px;
+  width: 0px;
   min-height: 100%;
 }
 

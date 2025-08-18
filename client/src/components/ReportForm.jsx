@@ -170,6 +170,8 @@ export default function ReportForm({ onSuccess }) {
       // Map fields to sendReport schema
       const type = formData.disasterType?.trim();
       const location = formData.location?.trim();
+      const fullName = formData.fullName?.trim();
+      const description = formData.description?.trim();
 
       // derive city from "Area, City" if provided
       let city = "Unknown";
@@ -193,7 +195,7 @@ export default function ReportForm({ onSuccess }) {
       }
 
       // call sendReport util
-      const result = await sendReport({ type, location, city, contact, imageUrl });
+      const result = await sendReport({ type, location, city, contact, imageUrl, fullName, description });
       if (result.success) {
         alert("Report submitted successfully! It is now marked as Pending.");
         if (onSuccess) onSuccess();
@@ -251,7 +253,7 @@ export default function ReportForm({ onSuccess }) {
           <label htmlFor="fullName">Full Name *</label>
           <input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} required />
 
-          <label htmlFor="phone">Contact Info (Phone) *</label>
+          <label htmlFor="phone">Contact Info *</label>
           <input
             id="phone"
             type="tel"
@@ -289,7 +291,7 @@ export default function ReportForm({ onSuccess }) {
               <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", marginTop: 10, borderRadius: 8 }} />
             </div>
           )}
-
+        
           <button
             type="button"
             className="submit-btn"

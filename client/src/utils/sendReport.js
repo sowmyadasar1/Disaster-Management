@@ -6,13 +6,15 @@ import { db } from "../firebase";
  *
  * @param {Object} reportData
  * @param {string} reportData.type - Disaster type (e.g., Flood, Earthquake)
+ * @param {string} reportData.fullName - Full Name
+ * @param {string} reportData.description - Disaster description
  * @param {string} reportData.location - Specific area/location
  * @param {string} reportData.city - City name
  * @param {string} reportData.contact - Optional contact information
  * @param {string|null} [reportData.imageUrl] - Optional uploaded image URL
  * @returns {Promise<{ success: boolean, id?: string, error?: string }>}
  */
-export const sendReport = async ({ type, location, city, contact, imageUrl }) => {
+export const sendReport = async ({ type, location, city, contact, imageUrl, fullName, description }) => {
   // Basic validation
   if (!type || !location || !city) {
     return { success: false, error: "Missing required fields" };
@@ -22,6 +24,8 @@ export const sendReport = async ({ type, location, city, contact, imageUrl }) =>
     // Add a new report to Firestore with default "Pending" status
     const docRef = await addDoc(collection(db, "reports"), {
       type,
+      fullName,
+      description,
       location,
       city,
       contact: contact || null,
