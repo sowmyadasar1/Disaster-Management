@@ -4,6 +4,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
+// Validate environment variables
+if (
+  !process.env.REACT_APP_FIREBASE_API_KEY ||
+  !process.env.REACT_APP_FIREBASE_AUTH_DOMAIN ||
+  !process.env.REACT_APP_FIREBASE_PROJECT_ID
+) {
+  console.warn("⚠️ Firebase environment variables are missing or incomplete.");
+}
+
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -14,9 +23,10 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Optionally name your Firebase app
+const app = initializeApp(firebaseConfig, "disaster-management");
 
-// Export initialized services — **auth must be exported** and used by components
+// Export initialized services
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);

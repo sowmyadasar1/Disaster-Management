@@ -1,79 +1,67 @@
+// src/components/ReportList.js
 import React, { useEffect, useState } from "react";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
-import "./ReportList.css";
 
+/**
+ * Displays disaster reports in real time.
+ */
 const ReportList = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "disasterReports"));
-        const reportData = querySnapshot.docs.map((doc) => ({
+    const reportsQuery = query(
+      collection(db, "reports"),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      reportsQuery,
+      (snapshot) => {
+        const fetched = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setReports(reportData);
-      } catch (error) {
-        console.error("❌ Error fetching reports:", error);
-      } finally {
+        setReports(fetched);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Error fetching reports:", err);
+        setError("Failed to load reports.");
         setLoading(false);
       }
-    };
+    );
 
-    fetchReports();
+    return () => unsubscribe();
   }, []);
 
-  return (
-    <div className="report-list-container">
-      <h2 className="list-title">Submitted Reports</h2>
+  if (loading) return <p>Loading reports...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (reports.length === 0) return <p>No disaster reports yet.</p>;
 
-      {loading ? (
-        <p className="loading-text">Loading reports...</p>
-      ) : reports.length === 0 ? (
-        <p className="no-reports">No reports found.</p>
-      ) : (
-        <div className="reports-grid">
-          {reports.map((report) => (
-            <div className="report-card" key={report.id}>
-              <h3 className="report-title">
-                {report.incidentType || report.name}
-              </h3>
-              <p className="report-location">{report.location}</p>
-              <p className="report-message">
-                {report.description || report.message}
-              </p>
-              {report.imageUrl && (
+  return (
+    <div className="report-list">
+      <h2>Recent Disaster Reports</h2>
+      <ul>
+        {reports.map((report) => (
+          <li key={report.id}>
+            <strong>{report.type}</strong> — {report.location}, {report.city}
+            <br />
+            Status: {report.status || "Pending"}
+            {report.imageUrl && (
+              <div>
                 <img
                   src={report.imageUrl}
-                  alt="Incident"
-                  className="report-image"
+                  alt={`${report.type} evidence`}
+                  style={{ width: "150px", marginTop: "4px" }}
                 />
-              )}
-              <p className="report-contact">
-                <strong>Contact:</strong> {report.contact || "N/A"}
-              </p>
-              <p className="report-status">
-                Status:{" "}
-                <span
-                  className={
-                    report.verified ? "status-verified" : "status-pending"
-                  }
-                >
-                  {report.verified ? "Verified" : "Pending"}
-                </span>
-              </p>
-              <p className="report-date">
-                {report.createdAt?.toDate
-                  ? report.createdAt.toDate().toLocaleString()
-                  : "Unknown date"}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

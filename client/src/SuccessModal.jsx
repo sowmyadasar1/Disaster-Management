@@ -1,5 +1,4 @@
 import React from "react";
-import "./SuccessModal.css";
 
 const SuccessModal = ({ show, onClose }) => {
   if (!show) return null;
@@ -8,8 +7,10 @@ const SuccessModal = ({ show, onClose }) => {
     <div className="modal-overlay">
       <div className="modal-container">
         <h2>Incident Reported!</h2>
-        <p>Your report has been successfully submitted. We’ll review it soon.</p>
-        <button onClick={onClose} className="close-btn">OK</button>
+        <p>Your report has been successfully submitted and is now marked as Pending.</p>
+        <button onClick={onClose} className="close-btn">
+          OK
+        </button>
       </div>
     </div>
   );

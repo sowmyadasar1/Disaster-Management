@@ -1,152 +1,364 @@
-import React, { useState } from "react";
-import { sendReport } from "../utils/sendReport";
+// src/components/ReportForm.jsx
+import React, { useState, useEffect, useRef } from "react";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { app } from "../firebase";
 import { uploadImage } from "../utils/uploadImage";
-import "./ReportForm.css";
+import { sendReport } from "../utils/sendReport";
 
-const ReportForm = ({ formData: initialData }) => {
-  const [formData, setFormData] = useState({
-    name: initialData?.name || "",
-    contact: initialData?.phone || "",
-    location: initialData?.location || "",
-    description: initialData?.description || "",
-    incidentType: initialData?.disasterType || "",
-    imageFile: initialData?.image || null,
-    verified: true // OTP passed
-  });
+const auth = getAuth(app);
 
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState({ type: "", message: "" });
+const initialForm = {
+  disasterType: "",
+  fullName: "",
+  location: "",
+  description: "",
+  phone: "",
+  image: null,
+};
+
+export default function ReportForm({ onSuccess }) {
+  const [formData, setFormData] = useState(initialForm);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const [otpStage, setOtpStage] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [otp, setOtp] = useState("");
+
+  const [errorMsg, setErrorMsg] = useState("");
+  const [infoMsg, setInfoMsg] = useState("");
+
+  const recaptchaReady = useRef(false);
+  const previewUrlRef = useRef(null);
+
+  // cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (window.recaptchaVerifier) {
+        try {
+          if (typeof window.recaptchaVerifier.clear === "function") {
+            window.recaptchaVerifier.clear();
+          }
+        } catch {}
+        window.recaptchaVerifier = null;
+      }
+      recaptchaReady.current = false;
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const handleChange = (e) => {
+    setErrorMsg("");
+    setInfoMsg("");
     const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      contact: "",
-      location: "",
-      description: "",
-      incidentType: "",
-      imageFile: null,
-      verified: true
-    });
-  };
+    if (files && files[0]) {
+      const file = files[0];
+      setFormData((p) => ({ ...p, [name]: file }));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setFeedback({ type: "", message: "" });
-
-    try {
-      let imageUrl = null;
-      if (formData.imageFile) {
-        const uploadResult = await uploadImage(formData.imageFile);
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error || "Image upload failed");
-        }
-        imageUrl = uploadResult.url;
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
       }
-
-      await sendReport({
-        name: formData.name.trim(),
-        contact: formData.contact,
-        location: formData.location.trim(),
-        description: formData.description.trim(),
-        incidentType: formData.incidentType,
-        imageUrl,
-        verified: formData.verified,
-        createdAt: new Date()
-      });
-
-      setFeedback({ type: "success", message: "✅ Report submitted successfully!" });
-      resetForm();
-    } catch (error) {
-      console.error("❌ Report submission error:", error);
-      setFeedback({
-        type: "error",
-        message: error.message || "Something went wrong while submitting the report.",
-      });
-    } finally {
-      setLoading(false);
+      const nextUrl = URL.createObjectURL(file);
+      previewUrlRef.current = nextUrl;
+      setImagePreview(nextUrl);
+    } else {
+      setFormData((p) => ({ ...p, [name]: value }));
     }
   };
 
+  const validateBeforeOtp = () => {
+    const phoneRegex = /^\+91\d{10}$/;
+    if (!formData.disasterType || !formData.location || !formData.phone || !formData.fullName) {
+      setErrorMsg("Please fill all fields marked with *.");
+      return false;
+    }
+    if (!phoneRegex.test(formData.phone)) {
+      setErrorMsg("Enter phone in +91XXXXXXXXXX format.");
+      return false;
+    }
+    return true;
+  };
+
+  const setupRecaptcha = () => {
+    if (recaptchaReady.current && window.recaptchaVerifier) return;
+
+    // clear stale instance (defensive)
+    if (window.recaptchaVerifier) {
+      try {
+        if (typeof window.recaptchaVerifier.clear === "function") window.recaptchaVerifier.clear();
+      } catch {}
+      window.recaptchaVerifier = null;
+      recaptchaReady.current = false;
+    }
+
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+      size: "invisible",
+      callback: () => {},
+      "expired-callback": () => {
+        try {
+          if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === "function") {
+            window.recaptchaVerifier.clear();
+          }
+        } catch {}
+        window.recaptchaVerifier = null;
+        recaptchaReady.current = false;
+      },
+    });
+
+    recaptchaReady.current = true;
+  };
+
+  const handleNext = () => {
+    if (!validateBeforeOtp()) return;
+    setupRecaptcha();
+    setOtpStage(true);
+  };
+
+  const sendOTP = async () => {
+    setErrorMsg("");
+    setInfoMsg("");
+
+    if (!/^\+91\d{10}$/.test(formData.phone)) {
+      setErrorMsg("Enter phone in +91XXXXXXXXXX format.");
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      if (!window.recaptchaVerifier) throw new Error("reCAPTCHA not ready");
+      const confirmation = await signInWithPhoneNumber(auth, formData.phone, window.recaptchaVerifier);
+      setConfirmationResult(confirmation);
+      setInfoMsg(`OTP sent to ${formData.phone}`);
+      alert(`OTP sent to ${formData.phone}`); // user-visible alert
+    } catch (err) {
+      console.error("sendOTP error:", err);
+      setErrorMsg("Failed to send OTP. Check Firebase setup or use test numbers.");
+      alert("Failed to send OTP. Check Firebase setup or use test numbers.");
+      try {
+        if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === "function") {
+          window.recaptchaVerifier.clear();
+        }
+      } catch {}
+      window.recaptchaVerifier = null;
+      recaptchaReady.current = false;
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const verifyOTPAndSubmit = async () => {
+    setErrorMsg("");
+    setInfoMsg("");
+
+    if (!otp || !confirmationResult) {
+      setErrorMsg("Enter the OTP sent to your phone.");
+      return;
+    }
+
+    setVerifyingOtp(true);
+    try {
+      // verify OTP with Firebase confirmation result
+      await confirmationResult.confirm(otp);
+
+      // Map fields to sendReport schema
+      const type = formData.disasterType?.trim();
+      const location = formData.location?.trim();
+
+      // derive city from "Area, City" if provided
+      let city = "Unknown";
+      if (location && location.includes(",")) {
+        const last = location.split(",").pop();
+        if (last && last.trim()) city = last.trim();
+      }
+
+      const contact = formData.phone?.trim();
+
+      // upload image (optional)
+      let imageUrl = null;
+      if (formData.image) {
+        const uploadResult = await uploadImage(formData.image);
+        if (uploadResult.success) {
+          imageUrl = uploadResult.url;
+        } else {
+          console.warn("Image upload failed:", uploadResult.error);
+          // do not block submission if image upload fails
+        }
+      }
+
+      // call sendReport util
+      const result = await sendReport({ type, location, city, contact, imageUrl });
+      if (result.success) {
+        alert("Report submitted successfully! It is now marked as Pending.");
+        if (onSuccess) onSuccess();
+        resetForm();
+      } else {
+        alert(`Failed to submit report: ${result.error || "unknown error"}`);
+      }
+    } catch (err) {
+      console.error("verifyOTPAndSubmit error:", err);
+      setErrorMsg("OTP verification or submission failed. Try again.");
+      alert("OTP verification or submission failed. Try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData(initialForm);
+    setOtpStage(false);
+    setConfirmationResult(null);
+    setOtp("");
+    setErrorMsg("");
+    setInfoMsg("");
+
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    setImagePreview(null);
+
+    setSendingOtp(false);
+    setVerifyingOtp(false);
+
+    if (window.recaptchaVerifier) {
+      try {
+        if (typeof window.recaptchaVerifier.clear === "function") window.recaptchaVerifier.clear();
+      } catch {}
+      window.recaptchaVerifier = null;
+    }
+    recaptchaReady.current = false;
+  };
+
   return (
-    <form className="report-form" onSubmit={handleSubmit}>
-      <h2>Submit a Disaster Report</h2>
+    <div className="report-form-wrapper">
+      <h2><strong><em>Submit a Disaster Report</em></strong></h2>
 
-      <input
-        type="text"
-        name="name"
-        placeholder="Your Name"
-        value={formData.name}
-        onChange={handleChange}
-        required
-      />
+      {/* keep recaptcha container mounted */}
+      <div id="recaptcha-container" />
 
-      <input
-        type="text"
-        name="contact"
-        placeholder="Contact Number"
-        value={formData.contact}
-        disabled
-      />
+      {!otpStage ? (
+        <form className="report-form" onSubmit={(e) => e.preventDefault()}>
+          {errorMsg && <div className="alert error">{errorMsg}</div>}
+          {infoMsg && <div className="alert info">{infoMsg}</div>}
 
-      <select
-        name="incidentType"
-        value={formData.incidentType}
-        onChange={handleChange}
-        required
-      >
-        <option value="">Select Disaster Type</option>
-        <option value="Flood">Flood</option>
-        <option value="Fire">Fire</option>
-        <option value="Earthquake">Earthquake</option>
-        <option value="Accident">Accident</option>
-        <option value="Other">Other</option>
-      </select>
+          <label htmlFor="fullName">Full Name *</label>
+          <input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} required />
 
-      <input
-        type="text"
-        name="location"
-        placeholder="Location"
-        value={formData.location}
-        onChange={handleChange}
-        required
-      />
+          <label htmlFor="phone">Contact Info (Phone) *</label>
+          <input
+            id="phone"
+            type="tel"
+            name="phone"
+            placeholder="+91XXXXXXXXXX"
+            value={formData.phone}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^\d+]/g, "");
+              setFormData((p) => ({ ...p, phone: v.startsWith("+") ? v : v.replace(/^\+*/, "+") }));
+            }}
+            required
+          />
 
-      <textarea
-        name="description"
-        placeholder="Describe the situation"
-        rows="4"
-        value={formData.description}
-        onChange={handleChange}
-        required
-      />
+          <label htmlFor="disasterType">Disaster Type *</label>
+          <select id="disasterType" name="disasterType" value={formData.disasterType} onChange={handleChange} required>
+            <option value="">Select</option>
+            <option value="Flood">Flood</option>
+            <option value="Fire">Fire</option>
+            <option value="Earthquake">Earthquake</option>
+            <option value="Accident">Accident</option>
+            <option value="Cyclone">Cyclone</option>
+            <option value="Other">Other</option>
+          </select>
 
-      <input
-        type="file"
-        name="imageFile"
-        accept="image/*"
-        onChange={handleChange}
-      />
+          <label htmlFor="description">Description</label>
+          <textarea id="description" name="description" rows="4" value={formData.description} onChange={handleChange} />
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Submitting..." : "Submit Report"}
-      </button>
+          <label htmlFor="location">Location (Area, City) *</label>
+          <input id="location" name="location" value={formData.location} onChange={handleChange} required />
 
-      {feedback.message && (
-        <div className={`message-box ${feedback.type === "error" ? "error" : "success"}`}>
-          {feedback.message}
+          <label htmlFor="image">Upload Image (optional)</label>
+          <input id="image" type="file" name="image" accept="image/*" onChange={handleChange} />
+          {imagePreview && (
+            <div className="preview">
+              <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", marginTop: 10, borderRadius: 8 }} />
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="submit-btn"
+            onClick={handleNext}
+            disabled={
+              !formData.disasterType ||
+              !formData.location ||
+              !formData.phone ||
+              !formData.fullName
+            }
+          >
+            Proceed to Verify
+          </button>
+        </form>
+      ) : (
+        <div className="otp-stage">
+          {errorMsg && <div className="alert error">{errorMsg}</div>}
+          {infoMsg && <div className="alert info">{infoMsg}</div>}
+
+          <h3>Verify Your Phone</h3>
+          <p>OTP will be sent to: <strong>{formData.phone}</strong></p>
+
+          {!confirmationResult ? (
+            <button onClick={sendOTP} disabled={sendingOtp}>
+              {sendingOtp ? "Sending..." : "Send OTP"}
+            </button>
+          ) : (
+            <>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                maxLength={8}
+                aria-label="Enter one-time password"
+              />
+              <div className="otp-actions">
+                <button onClick={verifyOTPAndSubmit} disabled={verifyingOtp}>
+                  {verifyingOtp ? "Verifying..." : "Verify & Submit"}
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmationResult(null);
+                    setOtp("");
+                    sendOTP(); // resend
+                  }}
+                >
+                  Resend OTP
+                </button>
+              </div>
+            </>
+          )}
+
+          <div className="back-btn">
+            <button
+              onClick={() => {
+                setOtpStage(false);
+                setConfirmationResult(null);
+                setOtp("");
+                setErrorMsg("");
+                setInfoMsg("");
+              }}
+            >
+              Back to Form
+            </button>
+          </div>
         </div>
       )}
-    </form>
+    </div>
   );
-};
-
-export default ReportForm;
+}
