@@ -93,70 +93,60 @@ body, html, #root {
 }
 
 /* -------------------- Success Modal Styles -------------------- */
+/* src/SuccessModal.css */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0,0,0,0.6);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 999;
-  animation: fadeIn 0.25s ease-in;
+  align-items: center;
+  z-index: 9999;
 }
 
 .modal-container {
   background: #fff;
-  padding: 25px 30px;
-  border-radius: 16px;
-  text-align: center;
+  border-radius: 12px;
   width: 90%;
-  max-width: 400px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transform: scale(0.9);
-  animation: scaleUp 0.25s ease-in forwards;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.modal-container h2 {
-  color: #1e54a0;
-  margin-bottom: 12px;
-  font-size: 1.5rem;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #0077b6;
+  color: #fff;
 }
 
-.modal-container p {
-  font-size: 0.95rem;
-  margin-bottom: 20px;
-  color: #444;
-  line-height: 1.4;
+.modal-message {
+  padding: 1rem;
+  font-size: 1rem;
+  color: #333;
 }
 
-.close-btn {
-  background-color: #1e54a0;
-  color: white;
+.modal-close {
+  background: transparent;
   border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
+  color: #fff;
+  font-size: 1.2rem;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 0.95rem;
-  transition: background 0.2s ease-in;
 }
 
-.close-btn:hover {
-  background-color: #163f7d;
+.modal-guidance-wrapper {
+  flex: 1;
+  display: flex;
+  height: 100%;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleUp {
-  from { transform: scale(0.9); opacity: 0.7; }
-  to { transform: scale(1); opacity: 1; }
-}
 
 /* ----------------------------- ReportForm Styles ----------------------------- */
 .report-form-wrapper {
@@ -288,4 +278,120 @@ body, html, #root {
 .no-reports {
   font-size: 0.9rem;
   color: #777;
+}
+
+/*---------------------- Admin --------------------------*/
+.admin-auth-card {
+  max-width: 420px;
+  width: 100%;
+  margin: 2rem auto;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+}
+.admin-auth-card h2 { margin-bottom: 0.75rem; }
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.admin-form input, .admin-form button, .admin-form select {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font: inherit;
+}
+.admin-form button {
+  background: #111827;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-form button:hover { background: #1f2937; }
+
+.admin-wrap { max-width: 1000px; margin: 0 auto; width: 100%; }
+.admin-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.admin-actions { display: flex; gap: 0.5rem; }
+.btn-outlined {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem 0.75rem; cursor: pointer;
+}
+.btn-outlined:hover { background: #f9fafb; }
+
+.admin-cards { display: grid; gap: 0.75rem; }
+.report-card {
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.card-head .name { font-weight: 700; }
+
+.card-line { display: flex; gap: 0.5rem; align-items: baseline; margin: 0.25rem 0; color: #374151; }
+.card-line .icon { width: 1.25rem; display: inline-block; }
+
+.admin-status-row {
+  display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem;
+}
+.admin-status-row select {
+  border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.4rem 0.6rem;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem;
+  border-radius: 999px; border: 1px solid transparent;
+}
+.badge-pending { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+.badge-progress { background: #fff1f2; color: #9d174d; border-color: #fecdd3; }
+.badge-resolved { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.badge-rejected { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+/* Alerts (reused) */
+.alert.error { background: #fee2e2; color: #991b1b; padding: 0.5rem 0.75rem; border-radius: 8px; }
+.alert.info { background: #dbeafe; color: #1e40af; padding: 0.5rem 0.75rem; border-radius: 8px; }
+
+/* Guidance Modal */
+.guidance-modal {
+  margin-top: 20px;
+  padding: 15px;
+  background: #e9d8a6;
+  border-radius: 10px;
+  box-shadow: 0px 0px 8px rgba(0,0,0,0.15);
+}
+
+.resource-guidance h3 {
+  margin: 10px 0 5px 0;
+  font-size: 1.1em;
+  color: #005f73;
+}
+
+.resource-guidance ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.resource-guidance li {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.resource-guidance a {
+  color: #0a9396;
+  text-decoration: underline;
+}
+
+.resource-guidance a:hover {
+  color: #005f73;
+  text-decoration: none;
 }

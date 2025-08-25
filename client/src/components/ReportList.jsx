@@ -7,10 +7,27 @@ const ReportList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper to format Firestore timestamps safely
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "Unknown";
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return date.toLocaleString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "Invalid date";
+    }
+  };
+
   useEffect(() => {
     const reportsQuery = query(
       collection(db, "reports"),
-      orderBy("timestamp", "desc")
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(
@@ -51,60 +68,68 @@ const ReportList = () => {
 
   return (
     <div className="report-list">
-      <h2>Recent Disaster Reports</h2>
+      <h2 style={{ marginBottom: "16px" }}>Recent Disaster Reports</h2>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {reports.map((report) => (
           <li
             key={report.id}
             style={{
-              marginBottom: "16px",
-              padding: "16px",
+              marginBottom: "18px",
+              padding: "18px",
               border: "1px solid #ddd",
-              borderRadius: "12px",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+              borderRadius: "14px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              background: "#fff",
             }}
           >
-            {/* First line: Name left, Status badge right */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <strong style={{ fontSize: "1.1rem" }}>
+            {/* First row: Reporter name + Status badge */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "2px",
+              }}
+            >
+              <strong style={{ fontSize: "1.1rem", color: "#222" }}>
                 {report.fullName || "Unknown Reporter"}
               </strong>
               <span
                 style={{
-                  padding: "4px 10px",
+                  padding: "4px 12px",
                   borderRadius: "12px",
                   fontSize: "0.85rem",
                   fontWeight: "500",
-                  ...getStatusStyle(report.status)
+                  ...getStatusStyle(report.status),
                 }}
               >
                 {report.status || "Pending"}
               </span>
             </div>
 
-            {/* Second line: location with icon */}
-            <p style={{ margin: "6px 0", color: "#555", fontSize: "0.9rem" }}>
+            {/* Second row: Submission time */}
+            <p style={{ margin: "4px 0", fontSize: "0.8rem", color: "#777" }}>
+              Submitted at: {formatDate(report.createdAt)}
+            </p>
+
+            {/* Third row: Location */}
+            <p style={{ margin: "4px 0", color: "#555", fontSize: "0.9rem" }}>
               <span style={{ marginRight: "4px" }}>📍</span>
               {report.location || "Unknown Location"}
             </p>
 
-            {/* Third line: type — description */}
-            <p style={{ margin: "4px 0", fontSize: "0.95rem" }}>
-              <strong>{report.type || "Unknown Disaster"}</strong>
-              {" — "}
-              {report.description || "No description"}
+            {/* Fourth row: Contact */}
+            <p style={{ margin: "4px 0", fontSize: "0.9rem", color: "#444" }}>
+              <span style={{ marginRight: "4px" }}>📞</span>
+              {report.contact || "No contact info"}
             </p>
 
-            {/* Optional image */}
-            {report.imageUrl && (
-              <div>
-                <img
-                  src={report.imageUrl}
-                  alt={`${report.type || "Disaster"} evidence`}
-                  style={{ width: "150px", marginTop: "6px", borderRadius: "6px" }}
-                />
-              </div>
-            )}
+            {/* Fifth row: Type — description */}
+            <p style={{ margin: "4px 0", fontSize: "0.95rem", color: "#333" }}>
+              <strong>{report.type || "Unknown Disaster"}</strong>
+              {" — "}
+              {report.description || "No description provided"}
+            </p>
           </li>
         ))}
       </ul>

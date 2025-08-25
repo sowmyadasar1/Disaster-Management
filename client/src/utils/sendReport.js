@@ -2,6 +2,31 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
 /**
+ * Convert a location (address + city) into latitude/longitude using Nominatim API.
+ *
+ * @param {string} address - The full address to geocode.
+ * @returns {Promise<{ lat: number, lng: number }|null>}
+ */
+const geocodeLocation = async (address) => {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+    );
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error geocoding location:", error);
+    return null;
+  }
+};
+
+/**
  * Sends a disaster report to Firestore.
  *
  * @param {Object} reportData
@@ -14,14 +39,23 @@ import { db } from "../firebase";
  * @param {string|null} [reportData.imageUrl] - Optional uploaded image URL
  * @returns {Promise<{ success: boolean, id?: string, error?: string }>}
  */
-export const sendReport = async ({ type, location, city, contact, imageUrl, fullName, description }) => {
-  // Basic validation
+export const sendReport = async ({
+  type,
+  fullName,
+  description,
+  location,
+  city,
+  contact,
+  imageUrl
+}) => {
   if (!type || !location || !city) {
     return { success: false, error: "Missing required fields" };
   }
 
   try {
-    // Add a new report to Firestore with default "Pending" status
+    // Get latitude/longitude automatically from address
+    const coords = await geocodeLocation(`${location}, ${city}`);
+
     const docRef = await addDoc(collection(db, "reports"), {
       type,
       fullName,
@@ -30,8 +64,10 @@ export const sendReport = async ({ type, location, city, contact, imageUrl, full
       city,
       contact: contact || null,
       imageUrl: imageUrl || null,
-      status: "Pending",           // default workflow status
-      timestamp: serverTimestamp() // consistent server time
+      lat: coords ? coords.lat : null, // store geocode if available
+      lng: coords ? coords.lng : null,
+      status: "Pending",
+      timestamp: serverTimestamp(),
     });
 
     return { success: true, id: docRef.id };

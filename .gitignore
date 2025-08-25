@@ -1,3 +1,10 @@
 client/.env
 client/.env.local
 server/.firebaseServiceKey
+
+# Ignore node_modules everywhere
+node_modules/
+
+# Ignore service account keys and scripts
+server/serviceAccountKey.json
+server/setAdmin.js

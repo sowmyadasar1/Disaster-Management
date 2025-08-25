@@ -1,76 +1,80 @@
-// src/components/ReportForm.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { app } from "../firebase";
-import { uploadImage } from "../utils/uploadImage";
-import { sendReport } from "../utils/sendReport";
+import { app, db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
+import axios from "axios";
 
 const auth = getAuth(app);
 
 const initialForm = {
   disasterType: "",
   fullName: "",
-  location: "",
+  location: "",  // merged area + city + state
   description: "",
   phone: "",
-  image: null,
 };
 
 export default function ReportForm({ onSuccess }) {
   const [formData, setFormData] = useState(initialForm);
-  const [imagePreview, setImagePreview] = useState(null);
-
   const [otpStage, setOtpStage] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [otp, setOtp] = useState("");
-
   const [errorMsg, setErrorMsg] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
+  const [coords, setCoords] = useState({ lat: null, lng: null }); // store geolocation
 
   const recaptchaReady = useRef(false);
-  const previewUrlRef = useRef(null);
 
-  // cleanup on unmount
   useEffect(() => {
     return () => {
-      if (window.recaptchaVerifier) {
-        try {
-          if (typeof window.recaptchaVerifier.clear === "function") {
-            window.recaptchaVerifier.clear();
-          }
-        } catch {}
-        window.recaptchaVerifier = null;
+      if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === "function") {
+        window.recaptchaVerifier.clear();
       }
+      window.recaptchaVerifier = null;
       recaptchaReady.current = false;
-
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
     };
   }, []);
 
   const handleChange = (e) => {
     setErrorMsg("");
     setInfoMsg("");
-    const { name, value, files } = e.target;
+    const { name, value } = e.target;
+    setFormData((p) => ({ ...p, [name]: value }));
+  };
 
-    if (files && files[0]) {
-      const file = files[0];
-      setFormData((p) => ({ ...p, [name]: file }));
-
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-      const nextUrl = URL.createObjectURL(file);
-      previewUrlRef.current = nextUrl;
-      setImagePreview(nextUrl);
-    } else {
-      setFormData((p) => ({ ...p, [name]: value }));
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCoords({ lat, lng });
+
+        try {
+          const res = await axios.get("https://api.opencagedata.com/geocode/v1/json", {
+            params: { q: `${lat},${lng}`, key: process.env.REACT_APP_OPENCAGE_KEY },
+          });
+          if (res.data.results.length > 0) {
+            const formatted = res.data.results[0].formatted;
+            setFormData((p) => ({ ...p, location: formatted }));
+          } else {
+            setFormData((p) => ({ ...p, location: `${lat}, ${lng}` }));
+          }
+        } catch (err) {
+          console.warn("Reverse geocoding failed:", err);
+          setFormData((p) => ({ ...p, location: `${lat}, ${lng}` }));
+        }
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        alert("Unable to fetch location. Please type manually.");
+      }
+    );
   };
 
   const validateBeforeOtp = () => {
@@ -89,24 +93,11 @@ export default function ReportForm({ onSuccess }) {
   const setupRecaptcha = () => {
     if (recaptchaReady.current && window.recaptchaVerifier) return;
 
-    // clear stale instance (defensive)
-    if (window.recaptchaVerifier) {
-      try {
-        if (typeof window.recaptchaVerifier.clear === "function") window.recaptchaVerifier.clear();
-      } catch {}
-      window.recaptchaVerifier = null;
-      recaptchaReady.current = false;
-    }
-
     window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
       size: "invisible",
       callback: () => {},
       "expired-callback": () => {
-        try {
-          if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === "function") {
-            window.recaptchaVerifier.clear();
-          }
-        } catch {}
+        try { if (window.recaptchaVerifier.clear) window.recaptchaVerifier.clear(); } catch {}
         window.recaptchaVerifier = null;
         recaptchaReady.current = false;
       },
@@ -122,153 +113,107 @@ export default function ReportForm({ onSuccess }) {
   };
 
   const sendOTP = async () => {
-    setErrorMsg("");
-    setInfoMsg("");
-
+    setErrorMsg(""); setInfoMsg("");
     if (!/^\+91\d{10}$/.test(formData.phone)) {
-      setErrorMsg("Enter phone in +91XXXXXXXXXX format.");
-      return;
+      setErrorMsg("Enter phone in +91XXXXXXXXXX format."); return;
     }
-
     setSendingOtp(true);
     try {
-      if (!window.recaptchaVerifier) throw new Error("reCAPTCHA not ready");
       const confirmation = await signInWithPhoneNumber(auth, formData.phone, window.recaptchaVerifier);
       setConfirmationResult(confirmation);
       setInfoMsg(`OTP sent to ${formData.phone}`);
-      alert(`OTP sent to ${formData.phone}`); // user-visible alert
+      alert(`OTP sent to ${formData.phone}`);
     } catch (err) {
       console.error("sendOTP error:", err);
       setErrorMsg("Failed to send OTP. Check Firebase setup or use test numbers.");
-      alert("Failed to send OTP. Check Firebase setup or use test numbers.");
-      try {
-        if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === "function") {
-          window.recaptchaVerifier.clear();
-        }
-      } catch {}
+      if (window.recaptchaVerifier?.clear) window.recaptchaVerifier.clear();
       window.recaptchaVerifier = null;
       recaptchaReady.current = false;
-    } finally {
-      setSendingOtp(false);
-    }
+    } finally { setSendingOtp(false); }
   };
 
   const verifyOTPAndSubmit = async () => {
-    setErrorMsg("");
-    setInfoMsg("");
-
-    if (!otp || !confirmationResult) {
-      setErrorMsg("Enter the OTP sent to your phone.");
-      return;
-    }
-
+    setErrorMsg(""); setInfoMsg("");
+    if (!otp || !confirmationResult) { setErrorMsg("Enter the OTP sent to your phone."); return; }
     setVerifyingOtp(true);
+
     try {
-      // verify OTP with Firebase confirmation result
       await confirmationResult.confirm(otp);
 
-      // Map fields to sendReport schema
-      const type = formData.disasterType?.trim();
-      const location = formData.location?.trim();
-      const fullName = formData.fullName?.trim();
-      const description = formData.description?.trim();
+      const { disasterType, fullName, location, description, phone } = formData;
 
-      // derive city from "Area, City" if provided
-      let city = "Unknown";
-      if (location && location.includes(",")) {
-        const last = location.split(",").pop();
-        if (last && last.trim()) city = last.trim();
+      let lat = coords.lat, lng = coords.lng;
+      if (!lat || !lng) {
+        try {
+          const response = await axios.get("https://api.opencagedata.com/geocode/v1/json", {
+            params: { q: location, key: process.env.REACT_APP_OPENCAGE_KEY },
+          });
+          if (response.data.results.length > 0) {
+            lat = response.data.results[0].geometry.lat;
+            lng = response.data.results[0].geometry.lng;
+          }
+        } catch (err) { console.warn("Geocoding failed:", err); }
       }
 
-      const contact = formData.phone?.trim();
+      await addDoc(collection(db, "reports"), {
+        type: disasterType,
+        fullName,
+        location,
+        description,
+        contact: phone,
+        status: "pending",
+        lat,
+        lng,
+        createdAt: new Date(),
+      });
 
-      // upload image (optional)
-      let imageUrl = null;
-      if (formData.image) {
-        const uploadResult = await uploadImage(formData.image);
-        if (uploadResult.success) {
-          imageUrl = uploadResult.url;
-        } else {
-          console.warn("Image upload failed:", uploadResult.error);
-          // do not block submission if image upload fails
-        }
-      }
+      alert("Report submitted successfully! It is now marked as Pending.");
 
-      // call sendReport util
-      const result = await sendReport({ type, location, city, contact, imageUrl, fullName, description });
-      if (result.success) {
-        alert("Report submitted successfully! It is now marked as Pending.");
-        if (onSuccess) onSuccess();
-        resetForm();
-      } else {
-        alert(`Failed to submit report: ${result.error || "unknown error"}`);
-      }
+      // Pass user location to parent so SuccessModal can use it
+      if (onSuccess) onSuccess({ lat, lng });
+
+      resetForm();
     } catch (err) {
       console.error("verifyOTPAndSubmit error:", err);
       setErrorMsg("OTP verification or submission failed. Try again.");
       alert("OTP verification or submission failed. Try again.");
-    } finally {
-      setVerifyingOtp(false);
-    }
+    } finally { setVerifyingOtp(false); }
   };
 
   const resetForm = () => {
     setFormData(initialForm);
+    setCoords({ lat: null, lng: null });
     setOtpStage(false);
     setConfirmationResult(null);
     setOtp("");
-    setErrorMsg("");
-    setInfoMsg("");
-
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = null;
-    }
-    setImagePreview(null);
-
-    setSendingOtp(false);
-    setVerifyingOtp(false);
-
-    if (window.recaptchaVerifier) {
-      try {
-        if (typeof window.recaptchaVerifier.clear === "function") window.recaptchaVerifier.clear();
-      } catch {}
-      window.recaptchaVerifier = null;
-    }
+    setErrorMsg(""); setInfoMsg("");
+    if (window.recaptchaVerifier?.clear) window.recaptchaVerifier.clear();
+    window.recaptchaVerifier = null;
     recaptchaReady.current = false;
   };
 
   return (
     <div className="report-form-wrapper">
       <h2><strong><em>Submit a Disaster Report</em></strong></h2>
-
-      {/* keep recaptcha container mounted */}
       <div id="recaptcha-container" />
-
       {!otpStage ? (
         <form className="report-form" onSubmit={(e) => e.preventDefault()}>
           {errorMsg && <div className="alert error">{errorMsg}</div>}
           {infoMsg && <div className="alert info">{infoMsg}</div>}
 
-          <label htmlFor="fullName">Full Name *</label>
-          <input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} required />
+          <label>Full Name *</label>
+          <input name="fullName" value={formData.fullName} onChange={handleChange} required />
 
-          <label htmlFor="phone">Contact Info *</label>
-          <input
-            id="phone"
-            type="tel"
-            name="phone"
-            placeholder="+91XXXXXXXXXX"
-            value={formData.phone}
+          <label>Contact Info *</label>
+          <input type="tel" name="phone" placeholder="+91XXXXXXXXXX" value={formData.phone} 
             onChange={(e) => {
               const v = e.target.value.replace(/[^\d+]/g, "");
-              setFormData((p) => ({ ...p, phone: v.startsWith("+") ? v : v.replace(/^\+*/, "+") }));
-            }}
-            required
+              setFormData((p) => ({ ...p, phone: v.startsWith("+91") ? v : "+91" + v }));
+            }} required 
           />
 
-          <label htmlFor="disasterType">Disaster Type *</label>
-          <select id="disasterType" name="disasterType" value={formData.disasterType} onChange={handleChange} required>
+          <label>Disaster Type *</label>
+          <select name="disasterType" value={formData.disasterType} onChange={handleChange} required>
             <option value="">Select</option>
             <option value="Flood">Flood</option>
             <option value="Fire">Fire</option>
@@ -278,31 +223,18 @@ export default function ReportForm({ onSuccess }) {
             <option value="Other">Other</option>
           </select>
 
-          <label htmlFor="description">Description</label>
-          <textarea id="description" name="description" rows="4" value={formData.description} onChange={handleChange} />
+          <label>Description</label>
+          <textarea name="description" rows={4} value={formData.description} onChange={handleChange} />
 
-          <label htmlFor="location">Location (Area, City) *</label>
-          <input id="location" name="location" value={formData.location} onChange={handleChange} required />
+          <label>Location (Area, City, State) *</label>
+          <input name="location" value={formData.location} onChange={handleChange} required />
+          <button type="button" onClick={handleUseCurrentLocation} style={{ marginTop: "8px" }}>
+            Use My Current Location
+          </button>
 
-          <label htmlFor="image">Upload Image (optional)</label>
-          <input id="image" type="file" name="image" accept="image/*" onChange={handleChange} />
-          {imagePreview && (
-            <div className="preview">
-              <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", marginTop: 10, borderRadius: 8 }} />
-            </div>
-          )}
-        
-          <button
-            type="button"
-            className="submit-btn"
-            onClick={handleNext}
-            disabled={
-              !formData.disasterType ||
-              !formData.location ||
-              !formData.phone ||
-              !formData.fullName
-            }
-          >
+          <button type="button" className="submit-btn" 
+            onClick={handleNext} 
+            disabled={!formData.disasterType || !formData.location || !formData.phone || !formData.fullName}>
             Proceed to Verify
           </button>
         </form>
@@ -310,36 +242,19 @@ export default function ReportForm({ onSuccess }) {
         <div className="otp-stage">
           {errorMsg && <div className="alert error">{errorMsg}</div>}
           {infoMsg && <div className="alert info">{infoMsg}</div>}
-
           <h3>Verify Your Phone</h3>
-          <p>OTP will be sent to: <strong>{formData.phone}</strong></p>
 
           {!confirmationResult ? (
-            <button onClick={sendOTP} disabled={sendingOtp}>
-              {sendingOtp ? "Sending..." : "Send OTP"}
-            </button>
+            <button onClick={sendOTP} disabled={sendingOtp}>{sendingOtp ? "Sending..." : "Send OTP"}</button>
           ) : (
             <>
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="Enter OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                maxLength={8}
-                aria-label="Enter one-time password"
-              />
+              <input type="text" inputMode="numeric" placeholder="Enter OTP" value={otp} 
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} maxLength={8} />
               <div className="otp-actions">
                 <button onClick={verifyOTPAndSubmit} disabled={verifyingOtp}>
                   {verifyingOtp ? "Verifying..." : "Verify & Submit"}
                 </button>
-                <button
-                  onClick={() => {
-                    setConfirmationResult(null);
-                    setOtp("");
-                    sendOTP(); // resend
-                  }}
-                >
+                <button onClick={() => { setConfirmationResult(null); setOtp(""); sendOTP(); }}>
                   Resend OTP
                 </button>
               </div>
@@ -347,17 +262,7 @@ export default function ReportForm({ onSuccess }) {
           )}
 
           <div className="back-btn">
-            <button
-              onClick={() => {
-                setOtpStage(false);
-                setConfirmationResult(null);
-                setOtp("");
-                setErrorMsg("");
-                setInfoMsg("");
-              }}
-            >
-              Back to Form
-            </button>
+            <button onClick={resetForm}>Back to Form</button>
           </div>
         </div>
       )}
