@@ -4,7 +4,7 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const checkAdmin = require('./middleware/checkAdmin');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-
+const adminRoutes = require("./routes/adminRoutes");
 const serviceAccount = require('./serviceAccountKey.json');
 
 // ─────────────────── Firebase Admin Initialization ───────────────────
@@ -76,6 +76,9 @@ app.post('/setAdmin', async (req, res) => {
     res.status(500).json({ message: 'Failed to set admin claim', error: err.message });
   }
 });
+
+//------------------ use routes ------------------
+app.use('/api/admin', adminRoutes);
 
 // ─────────────────── Admin-Only Routes ───────────────────
 // Change message status (pending → resolved)

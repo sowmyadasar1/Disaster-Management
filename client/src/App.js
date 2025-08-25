@@ -3,12 +3,14 @@ import React, { useState } from "react";
 import ReportForm from "./components/ReportForm";
 import ReportList from "./components/ReportList";
 import LiveMap from "./components/LiveMap";
-import SuccessModal from "./SuccessModal"; // <-- import the modal
+import AdminLogin from "./components/AdminLogin";  // <-- new import
+import SuccessModal from "./SuccessModal";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 
 export default function App() {
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false); // <-- toggle for admin login
 
   return (
     <div className="app-container">
@@ -16,20 +18,27 @@ export default function App() {
       <header className="header-section">
         <h1 className="app-title">The Disaster Ledger</h1>
         <p className="app-subtitle">Tracking Emergencies Across India</p>
+        {/* Admin Login Button */}
+        <button 
+          onClick={() => setShowAdminLogin(!showAdminLogin)} 
+          style={{ padding: "6px 12px", marginTop: "10px" }}
+        >
+          {showAdminLogin ? "Close Admin Login" : "Admin Login"}
+        </button>
       </header>
+
+      {showAdminLogin && <AdminLogin />} {/* Render the admin login */}
 
       <hr className="section-divider" />
 
-      {/* Main content: left = map + reports (stacked), right = form */}
+      {/* Main content */}
       <div className="content-section">
-        {/* Left column: map (top) + horizontal divider + recent reports (below) */}
+        {/* Left column */}
         <div className="content-left">
           <div className="card">
             <LiveMap />
           </div>
-
           <div className="horizontal-divider" />
-
           <div className="card">
             <ReportList />
           </div>
@@ -38,7 +47,7 @@ export default function App() {
         {/* vertical divider */}
         <div className="vertical-divider" />
 
-        {/* Right column: form */}
+        {/* Right column */}
         <aside className="content-right">
           <div className="card">
             <ReportForm onSuccess={() => setShowSuccess(true)} />
@@ -46,14 +55,12 @@ export default function App() {
         </aside>
       </div>
 
-      {/* Success modal at root level */}
+      {/* Success modal */}
       <SuccessModal show={showSuccess} onClose={() => setShowSuccess(false)}>
-        {/* Inject resource guidance content into modal */}
         <div className="resource-guidance">
           <h2>Emergency Resources</h2>
           <p>Find nearby help, shelters, and instructions:</p>
           <div className="guidance-section">
-            {/* Reuse LiveMap for guidance */}
             <LiveMap />
           </div>
           <div className="guidance-contacts">
