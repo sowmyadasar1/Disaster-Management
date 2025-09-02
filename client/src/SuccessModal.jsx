@@ -1,6 +1,6 @@
 // src/SuccessModal.jsx
 import React from "react";
-import ResourceGuidance from "./components/ResourceGuidance";
+import ResourceGuidance from "./pages/ResourceGuidance";
 import "./App.css";
 
 export default function SuccessModal({ show, onClose, userLocation }) {

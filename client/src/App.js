@@ -1,83 +1,66 @@
-// src/App.js
-import React, { useState } from "react";
+import React from "react";
 import ReportForm from "./components/ReportForm";
 import ReportList from "./components/ReportList";
 import LiveMap from "./components/LiveMap";
-import AdminLogin from "./components/AdminLogin";  // <-- new import
-import SuccessModal from "./SuccessModal";
+import AdminLogin from "./components/AdminLogin";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 
 export default function App() {
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false); // <-- toggle for admin login
+  const [showAdminLogin, setShowAdminLogin] = React.useState(false);
+  const [refreshKey, setRefreshKey] = React.useState(0);
 
   return (
     <div className="app-container">
-      {/* Header */}
+      {/* ===== Header Section ===== */}
       <header className="header-section">
-        <h1 className="app-title">The Disaster Ledger</h1>
-        <p className="app-subtitle">Tracking Emergencies Across India</p>
-        {/* Admin Login Button */}
-        <button 
-          onClick={() => setShowAdminLogin(!showAdminLogin)} 
-          style={{ padding: "6px 12px", marginTop: "10px" }}
-        >
-          {showAdminLogin ? "Close Admin Login" : "Admin Login"}
-        </button>
+        <div className="header-left">
+          <h1 className="app-title">Disaster Response System</h1>
+        </div>
+        <nav className="header-right">
+          <ul className="nav-items">
+            <li><a href="/">Home</a></li>
+            <li>
+              <button 
+                onClick={() => setShowAdminLogin(!showAdminLogin)} 
+                className="nav-button"
+              >
+                Admin
+              </button>
+            </li>
+            <li><a href="/reports">Reports</a></li>
+            <li><a href="/guidance">Resource Guidance</a></li>
+          </ul>
+        </nav>
       </header>
 
-      {showAdminLogin && <AdminLogin />} {/* Render the admin login */}
+      {showAdminLogin && <AdminLogin />}
 
       <hr className="section-divider" />
 
-      {/* Main content */}
-      <div className="content-section">
-        {/* Left column */}
-        <div className="content-left">
-          <div className="card">
-            <LiveMap />
-          </div>
-          <div className="horizontal-divider" />
-          <div className="card">
-            <ReportList />
-          </div>
+      {/* ===== Main 2x2 Grid Section ===== */}
+      <div className="grid-container">
+        {/* Top-left: Report Form */}
+        <div className="grid-item">
+          <ReportForm onSuccess={() => setRefreshKey(p => p + 1)} />
         </div>
 
-        {/* vertical divider */}
-        <div className="vertical-divider" />
+        {/* Top-right: Analytics */}
+        <div className="grid-item">
+          <AnalyticsDashboard refreshKey={refreshKey} />
+        </div>
 
-        {/* Right column */}
-        <aside className="content-right">
-          <div className="card">
-            <ReportForm onSuccess={() => setShowSuccess(true)} />
-          </div>
-        </aside>
+        {/* Bottom-left: Live Map */}
+        <div className="grid-item">
+          <LiveMap />
+        </div>
+
+        {/* Bottom-right: Recent Reports */}
+        <div className="grid-item">
+          <ReportList limit={3} />
+        </div>
       </div>
-
-      {/* Success modal */}
-      <SuccessModal show={showSuccess} onClose={() => setShowSuccess(false)}>
-        <div className="resource-guidance">
-          <h2>Emergency Resources</h2>
-          <p>Find nearby help, shelters, and instructions:</p>
-          <div className="guidance-section">
-            <LiveMap />
-          </div>
-          <div className="guidance-contacts">
-            <h3>Important Contacts</h3>
-            <ul>
-              <li>National Emergency Helpline: 112</li>
-              <li>Disaster Management: 108</li>
-              <li>Fire Services: 101</li>
-              <li>Medical Emergency: 102</li>
-            </ul>
-          </div>
-          <div className="guidance-instructions">
-            <h3>Safety Instructions</h3>
-            <p>Stay calm, follow official advisories, and keep communication lines open.</p>
-          </div>
-        </div>
-      </SuccessModal>
     </div>
   );
 }

@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 
-const ReportList = () => {
+const ReportList = ({ limit = 3 }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Helper to format Firestore timestamps safely
   const formatDate = (timestamp) => {
     if (!timestamp) return "Unknown";
     try {
@@ -70,7 +69,7 @@ const ReportList = () => {
     <div className="report-list">
       <h2 style={{ marginBottom: "16px" }}>Recent Disaster Reports</h2>
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {reports.map((report) => (
+        {reports.slice(0, limit).map((report) => (
           <li
             key={report.id}
             style={{
@@ -82,7 +81,6 @@ const ReportList = () => {
               background: "#fff",
             }}
           >
-            {/* First row: Reporter name + Status badge */}
             <div
               style={{
                 display: "flex",
@@ -107,24 +105,20 @@ const ReportList = () => {
               </span>
             </div>
 
-            {/* Second row: Submission time */}
             <p style={{ margin: "4px 0", fontSize: "0.8rem", color: "#777" }}>
               Submitted at: {formatDate(report.createdAt)}
             </p>
 
-            {/* Third row: Location */}
             <p style={{ margin: "4px 0", color: "#555", fontSize: "0.9rem" }}>
               <span style={{ marginRight: "4px" }}>📍</span>
               {report.location || "Unknown Location"}
             </p>
 
-            {/* Fourth row: Contact */}
             <p style={{ margin: "4px 0", fontSize: "0.9rem", color: "#444" }}>
               <span style={{ marginRight: "4px" }}>📞</span>
               {report.contact || "No contact info"}
             </p>
 
-            {/* Fifth row: Type — description */}
             <p style={{ margin: "4px 0", fontSize: "0.95rem", color: "#333" }}>
               <strong>{report.type || "Unknown Disaster"}</strong>
               {" — "}

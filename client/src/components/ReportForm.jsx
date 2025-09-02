@@ -11,7 +11,7 @@ const initialForm = {
   fullName: "",
   location: "",  // merged area + city + state
   description: "",
-  phone: "",
+  phone: "+91 ",  // always start with +91
 };
 
 export default function ReportForm({ onSuccess }) {
@@ -23,7 +23,8 @@ export default function ReportForm({ onSuccess }) {
   const [otp, setOtp] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
-  const [coords, setCoords] = useState({ lat: null, lng: null }); // store geolocation
+  const [coords, setCoords] = useState({ lat: null, lng: null });
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
 
   const recaptchaReady = useRef(false);
 
@@ -45,6 +46,16 @@ export default function ReportForm({ onSuccess }) {
   };
 
   const handleUseCurrentLocation = () => {
+    const newValue = !useCurrentLocation;
+    setUseCurrentLocation(newValue);
+
+    if (!newValue) {
+      // if toggled off → clear location so manual entry works again
+      setFormData((p) => ({ ...p, location: "" }));
+      return;
+    }
+
+    // if toggled on → fetch location
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
       return;
@@ -78,13 +89,13 @@ export default function ReportForm({ onSuccess }) {
   };
 
   const validateBeforeOtp = () => {
-    const phoneRegex = /^\+91\d{10}$/;
+    const phoneRegex = /^\+91\s\d{10}$/;
     if (!formData.disasterType || !formData.location || !formData.phone || !formData.fullName) {
       setErrorMsg("Please fill all fields marked with *.");
       return false;
     }
     if (!phoneRegex.test(formData.phone)) {
-      setErrorMsg("Enter phone in +91XXXXXXXXXX format.");
+      setErrorMsg("Enter phone in +91 XXXXXXXXXX format.");
       return false;
     }
     return true;
@@ -114,7 +125,7 @@ export default function ReportForm({ onSuccess }) {
 
   const sendOTP = async () => {
     setErrorMsg(""); setInfoMsg("");
-    if (!/^\+91\d{10}$/.test(formData.phone)) {
+    if (!/^\+91\s\d{10}$/.test(formData.phone)) {
       setErrorMsg("Enter phone in +91XXXXXXXXXX format."); return;
     }
     setSendingOtp(true);
@@ -169,9 +180,7 @@ export default function ReportForm({ onSuccess }) {
 
       alert("Report submitted successfully! It is now marked as Pending.");
 
-      // Pass user location to parent so SuccessModal can use it
       if (onSuccess) onSuccess({ lat, lng });
-
       resetForm();
     } catch (err) {
       console.error("verifyOTPAndSubmit error:", err);
@@ -187,6 +196,7 @@ export default function ReportForm({ onSuccess }) {
     setConfirmationResult(null);
     setOtp("");
     setErrorMsg(""); setInfoMsg("");
+    setUseCurrentLocation(false);
     if (window.recaptchaVerifier?.clear) window.recaptchaVerifier.clear();
     window.recaptchaVerifier = null;
     recaptchaReady.current = false;
@@ -205,11 +215,21 @@ export default function ReportForm({ onSuccess }) {
           <input name="fullName" value={formData.fullName} onChange={handleChange} required />
 
           <label>Contact Info *</label>
-          <input type="tel" name="phone" placeholder="+91XXXXXXXXXX" value={formData.phone} 
+          <input
+            type="tel"
+            name="phone"
+            placeholder="+91 XXXXXXXXXX"
+            value={formData.phone}
             onChange={(e) => {
-              const v = e.target.value.replace(/[^\d+]/g, "");
-              setFormData((p) => ({ ...p, phone: v.startsWith("+91") ? v : "+91" + v }));
-            }} required 
+              const digits = e.target.value.replace(/[^\d]/g, "");
+              setFormData((p) => ({ 
+                ...p, 
+                phone: digits.startsWith("91")
+              ? "+91 " + digits.slice(2, 12)
+              : "+91 " + digits.slice(0, 10)
+             }));
+            }}
+            required
           />
 
           <label>Disaster Type *</label>
@@ -228,13 +248,25 @@ export default function ReportForm({ onSuccess }) {
 
           <label>Location (Area, City, State) *</label>
           <input name="location" value={formData.location} onChange={handleChange} required />
-          <button type="button" onClick={handleUseCurrentLocation} style={{ marginTop: "8px" }}>
-            Use My Current Location
-          </button>
 
-          <button type="button" className="submit-btn" 
-            onClick={handleNext} 
-            disabled={!formData.disasterType || !formData.location || !formData.phone || !formData.fullName}>
+          {/* Radio for current location */}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }} onClick={handleUseCurrentLocation}>
+            <input
+              type="radio"
+              checked={useCurrentLocation}
+              onChange={handleUseCurrentLocation}
+            />
+            <label onClick={handleUseCurrentLocation} style={{ cursor: "pointer" }}>
+              Use My Current Location
+            </label>
+          </div>
+
+          <button
+            type="button"
+            className="submit-btn"
+            onClick={handleNext}
+            disabled={!formData.disasterType || !formData.location || !formData.phone || !formData.fullName}
+          >
             Proceed to Verify
           </button>
         </form>
@@ -248,8 +280,14 @@ export default function ReportForm({ onSuccess }) {
             <button onClick={sendOTP} disabled={sendingOtp}>{sendingOtp ? "Sending..." : "Send OTP"}</button>
           ) : (
             <>
-              <input type="text" inputMode="numeric" placeholder="Enter OTP" value={otp} 
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} maxLength={8} />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                maxLength={8}
+              />
               <div className="otp-actions">
                 <button onClick={verifyOTPAndSubmit} disabled={verifyingOtp}>
                   {verifyingOtp ? "Verifying..." : "Verify & Submit"}
