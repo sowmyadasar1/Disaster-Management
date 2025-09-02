@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase"; // adjust path if needed
+import { db } from "../firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { FaPhone, FaMapMarkerAlt } from "react-icons/fa";
+import "./ReportsPage.css";
 
 export default function ReportPage() {
   const [reports, setReports] = useState([]);
@@ -15,7 +17,7 @@ export default function ReportPage() {
       try {
         const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
-        const reportData = querySnapshot.docs.map(doc => ({
+        const reportData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
@@ -29,15 +31,17 @@ export default function ReportPage() {
     fetchReports();
   }, []);
 
-  // Apply filtering, searching, and sorting
   const filteredReports = reports
-    .filter(report =>
-      filterStatus === "all" || (report.status || "").toLowerCase() === filterStatus
+    .filter(
+      (report) =>
+        filterStatus === "all" ||
+        (report.status || "").toLowerCase() === filterStatus
     )
-    .filter(report =>
-      report.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.type?.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(
+      (report) =>
+        report.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.type?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       if (sortBy === "date") {
@@ -55,23 +59,23 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">All Disaster Reports</h1>
+    <div className="page-container">
+      <h1 className="section-title">All Disaster Reports</h1>
 
       {/* Search + Filter + Sort Controls */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="controls-container">
         <input
           type="text"
           placeholder="Search reports..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border p-2 rounded flex-1 min-w-[200px]"
+          className="control-input"
         />
 
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="border p-2 rounded"
+          className="control-select"
         >
           <option value="all">All Status</option>
           <option value="resolved">Resolved</option>
@@ -82,7 +86,7 @@ export default function ReportPage() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="border p-2 rounded"
+          className="control-select"
         >
           <option value="date">Sort by Date</option>
           <option value="status">Sort by Status</option>
@@ -92,25 +96,42 @@ export default function ReportPage() {
 
       {/* Reports Grid */}
       {filteredReports.length === 0 ? (
-        <p>No reports match your criteria.</p>
+        <p className="no-reports">No reports match your criteria.</p>
       ) : (
-        <div className="grid gap-4">
+        <div className="reports-grid">
           {filteredReports.map((report) => (
-            <div
-              key={report.id}
-              className="border p-4 rounded shadow hover:shadow-md transition"
-            >
-              <h2 className="text-xl font-semibold">{report.type || "Unknown Type"}</h2>
-              <p className="text-gray-600">{report.location || "No location provided"}</p>
-              <p className="mt-2"><strong>Status:</strong> {report.status || "N/A"}</p>
-              <p><strong>Reported by:</strong> {report.fullName || "Anonymous"}</p>
-              <p className="mt-1 text-sm text-gray-500">
+            <div key={report.id} className="report-card">
+              <h2 className="report-title">{report.type || "Unknown Type"}</h2>
+
+              <p className="report-location">
+                <FaMapMarkerAlt
+                  style={{ marginRight: "6px", color: "#e63946" }}
+                />
+                {report.location || "No location provided"}
+              </p>
+
+              {report.contact && (
+                <p>
+                  <FaPhone style={{ marginRight: "6px", color: "#333" }} />
+                  <strong>Contact:</strong> {report.contact}
+                </p>
+              )}
+
+              <p>
+                <strong>Status:</strong> {report.status || "N/A"}
+              </p>
+              <p>
+                <strong>Reported by:</strong> {report.fullName || "Anonymous"}
+              </p>
+
+              <p className="report-date">
                 {report.createdAt?.seconds
                   ? new Date(report.createdAt.seconds * 1000).toLocaleString()
                   : "No date available"}
               </p>
+
               {report.description && (
-                <p className="mt-2">{report.description}</p>
+                <p className="report-description">{report.description}</p>
               )}
             </div>
           ))}

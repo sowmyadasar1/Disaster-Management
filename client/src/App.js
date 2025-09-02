@@ -1,6 +1,8 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import ReportForm from "./components/ReportForm";
 import ReportList from "./components/ReportList";
+import ReportsPage from "./pages/ReportsPage";
 import LiveMap from "./components/LiveMap";
 import AdminLogin from "./components/AdminLogin";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
@@ -12,55 +14,67 @@ export default function App() {
   const [refreshKey, setRefreshKey] = React.useState(0);
 
   return (
-    <div className="app-container">
-      {/* ===== Header Section ===== */}
-      <header className="header-section">
-        <div className="header-left">
-          <h1 className="app-title">Disaster Response System</h1>
-        </div>
-        <nav className="header-right">
-          <ul className="nav-items">
-            <li><a href="/">Home</a></li>
-            <li>
-              <button 
-                onClick={() => setShowAdminLogin(!showAdminLogin)} 
-                className="nav-button"
-              >
-                Admin
-              </button>
-            </li>
-            <li><a href="/reports">Reports</a></li>
-            <li><a href="/guidance">Resource Guidance</a></li>
-          </ul>
-        </nav>
-      </header>
+    <Router>
+      <div className="app-container">
+        {/* ===== Header Section ===== */}
+        <header className="header-section">
+          <div className="header-left">
+            <h1 className="app-title">Disaster Response System</h1>
+          </div>
+          <nav className="header-right">
+            <ul className="nav-items">
+              <li><Link to="/">Home</Link></li>
+              <li>
+                <button 
+                  onClick={() => setShowAdminLogin(!showAdminLogin)} 
+                  className="nav-button"
+                >
+                  Admin
+                </button>
+              </li>
+              <li><Link to="/reports">Reports</Link></li>
+              <li><Link to="/guidance">Resource Guidance</Link></li>
+            </ul>
+          </nav>
+        </header>
 
-      {showAdminLogin && <AdminLogin />}
+        {showAdminLogin && <AdminLogin />}
 
-      <hr className="section-divider" />
+        <hr className="section-divider" />
 
-      {/* ===== Main 2x2 Grid Section ===== */}
-      <div className="grid-container">
-        {/* Top-left: Report Form */}
-        <div className="grid-item">
-          <ReportForm onSuccess={() => setRefreshKey(p => p + 1)} />
-        </div>
+        <Routes>
+          {/* Home Dashboard Route */}
+          <Route 
+            path="/" 
+            element={
+              <div className="grid-container">
+                {/* Top-left: Report Form */}
+                <div className="grid-item">
+                  <ReportForm onSuccess={() => setRefreshKey(p => p + 1)} />
+                </div>
 
-        {/* Top-right: Analytics */}
-        <div className="grid-item">
-          <AnalyticsDashboard refreshKey={refreshKey} />
-        </div>
+                {/* Top-right: Analytics */}
+                <div className="grid-item">
+                  <AnalyticsDashboard refreshKey={refreshKey} />
+                </div>
 
-        {/* Bottom-left: Live Map */}
-        <div className="grid-item">
-          <LiveMap />
-        </div>
+                {/* Bottom-left: Live Map */}
+                <div className="grid-item">
+                  <LiveMap />
+                </div>
 
-        {/* Bottom-right: Recent Reports */}
-        <div className="grid-item">
-          <ReportList limit={3} />
-        </div>
+                {/* Bottom-right: Recent Reports */}
+                <div className="grid-item">
+                  <ReportList limit={3} />
+                </div>
+              </div>
+            } 
+          />
+
+          {/* Reports Page Route */}
+          <Route path="/reports" element={<ReportsPage />} />
+        </Routes>
       </div>
-    </div>
+    </Router>
   );
 }
