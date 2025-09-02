@@ -5,6 +5,7 @@ import ReportList from "./components/ReportList";
 import ReportsPage from "./pages/ReportsPage";
 import LiveMap from "./components/LiveMap";
 import AdminLogin from "./components/AdminLogin";
+import ResourceGuidance from "./pages/ResourceGuidance";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
@@ -33,7 +34,7 @@ export default function App() {
                 </button>
               </li>
               <li><Link to="/reports">Reports</Link></li>
-              <li><Link to="/guidance">Resource Guidance</Link></li>
+              <li><Link to="/resource-guidance">Resource Guidance</Link></li>
             </ul>
           </nav>
         </header>
@@ -73,6 +74,7 @@ export default function App() {
 
           {/* Reports Page Route */}
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/resource-guidance" element={<ResourceGuidance />} />
         </Routes>
       </div>
     </Router>

@@ -5,6 +5,20 @@ server/.firebaseServiceKey
 # Ignore node_modules everywhere
 node_modules/
 
+# Logs
+*.log
+
+# Env files
+.env
+
+# Build directories
+build/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # Ignore service account keys and scripts
 server/serviceAccountKey.json
 server/setAdmin.js

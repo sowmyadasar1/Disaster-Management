@@ -1,1 +1,17 @@
 firebaseServiceKey.json
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+
+# Env files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output (if any)
+dist/
