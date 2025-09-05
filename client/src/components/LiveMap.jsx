@@ -4,20 +4,19 @@ import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "./LiveMap.css"; // <-- Make sure this path matches your project
+import "./LiveMap.css";
 
-// Clean gradient marker using DivIcon (self-contained)
+// Simple solid color markers
 const createMarkerIcon = (color) =>
   L.divIcon({
     className: "custom-marker",
     html: `<div style="
-      background: radial-gradient(circle at 30% 30%, ${color}, #333);
-      width: 18px;
-      height: 18px;
-      display:block;
-      border-radius: 50%;
-      border: 1px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      background:${color};
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      border:2px solid white;
+      box-shadow:0 0 6px rgba(0,0,0,0.3);
     "></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
@@ -35,6 +34,20 @@ export default function LiveMap() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Get color based on status
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "red";
+      case "in-progress":
+        return "yellow";
+      case "resolved":
+        return "green";
+      default:
+        return "grey";
+    }
+  };
 
   return (
     <div className="live-map-container">
@@ -56,28 +69,13 @@ export default function LiveMap() {
               <Marker
                 key={r.id}
                 position={[parseFloat(r.lat), parseFloat(r.lng)]}
-                icon={createMarkerIcon(
-                  r.status === "pending" ? "#ef4444" : "#10b981"
-                )}
+                icon={createMarkerIcon(getStatusColor(r.status))}
               >
                 <Popup>
                   <div>
                     <strong>{r.type}</strong>
-                    {r.description && <div>{r.description}</div>}
-                    <div>
-                      {r.area}, {r.city}, {r.state}
-                    </div>
-                    <em>
-                      Status:{" "}
-                      <span
-                        style={{
-                          color:
-                            r.status === "pending" ? "#dc2626" : "#16a34a",
-                        }}
-                      >
-                        {r.status}
-                      </span>
-                    </em>
+                    <br />
+                    <em>Status: {r.status}</em>
                   </div>
                 </Popup>
               </Marker>

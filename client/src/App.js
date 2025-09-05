@@ -4,14 +4,15 @@ import ReportForm from "./components/ReportForm";
 import ReportList from "./components/ReportList";
 import ReportsPage from "./pages/ReportsPage";
 import LiveMap from "./components/LiveMap";
-import AdminLogin from "./components/AdminLogin";
 import ResourceGuidance from "./pages/ResourceGuidance";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import AdminLogin from "./components/AdminLogin";
+import AdminDashboard from "./components/AdminDashboard";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute"; // ✅ new
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 
 export default function App() {
-  const [showAdminLogin, setShowAdminLogin] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
 
   return (
@@ -25,46 +26,30 @@ export default function App() {
           <nav className="header-right">
             <ul className="nav-items">
               <li><Link to="/">Home</Link></li>
-              <li>
-                <button 
-                  onClick={() => setShowAdminLogin(!showAdminLogin)} 
-                  className="nav-button"
-                >
-                  Admin
-                </button>
-              </li>
+              <li><Link to="/admin">Admin</Link></li>
               <li><Link to="/reports">Reports</Link></li>
               <li><Link to="/resource-guidance">Resource Guidance</Link></li>
             </ul>
           </nav>
         </header>
 
-        {showAdminLogin && <AdminLogin />}
-
         <hr className="section-divider" />
 
         <Routes>
-          {/* Home Dashboard Route */}
+          {/* Home Dashboard */}
           <Route 
             path="/" 
             element={
               <div className="grid-container">
-                {/* Top-left: Report Form */}
                 <div className="grid-item">
                   <ReportForm onSuccess={() => setRefreshKey(p => p + 1)} />
                 </div>
-
-                {/* Top-right: Analytics */}
                 <div className="grid-item">
                   <AnalyticsDashboard refreshKey={refreshKey} />
                 </div>
-
-                {/* Bottom-left: Live Map */}
                 <div className="grid-item">
                   <LiveMap />
                 </div>
-
-                {/* Bottom-right: Recent Reports */}
                 <div className="grid-item">
                   <ReportList limit={3} />
                 </div>
@@ -72,9 +57,24 @@ export default function App() {
             } 
           />
 
-          {/* Reports Page Route */}
+          {/* Reports Page */}
           <Route path="/reports" element={<ReportsPage />} />
+
+          {/* Resource Guidance */}
           <Route path="/resource-guidance" element={<ResourceGuidance />} />
+
+          {/* Admin Login Page */}
+          <Route path="/admin" element={<AdminLogin />} />
+
+          {/* Admin Dashboard (protected) */}
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
         </Routes>
       </div>
     </Router>
