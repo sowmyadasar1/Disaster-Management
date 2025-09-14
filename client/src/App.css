@@ -1,11 +1,11 @@
-/* ===== Global Layout ===== */
+/* Global Layout */
 body, html, #root {
   margin: 0;
   padding: 0;
   height: 100%;
   font-family: 'Inter', sans-serif;
-  background-color: #f9fafb; /* light neutral background */
-  color: #111827; /* near-black text */
+  background-color: #f9fafb;
+  color: #111827;
 }
 
 .app-container {
@@ -15,13 +15,13 @@ body, html, #root {
   flex-direction: column;
 }
 
-/* ===== Header with Navigation ===== */
+/* Header with nav */
 .header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.2rem 2rem;
-  background: #0f172a; /* deep navy */
+  background: #0f172a;
   color: #ffffff;
 }
 
@@ -55,19 +55,19 @@ body, html, #root {
 
 .nav-items a:hover,
 .nav-button:hover {
-  color: #38bdf8; /* bright accent blue */
+  color: #38bdf8;
 }
 
 .section-divider {
-  display: none; /* old divider removed */
+  display: none;
 }
 
-/* ===== Main Grid: 2x2 layout ===== */
+/* Main Grid: 2x2 layout */
 .grid-container {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr; /* two columns */
-  grid-template-rows: 1fr 1fr;    /* two rows */
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   gap: 1.5rem;
   padding: 1.5rem 2rem;
   max-width: 1600px;
@@ -86,7 +86,7 @@ body, html, #root {
   flex-direction: column;
 }
 
-/* ===== Analytics Dashboard (4 charts in one card) ===== */
+/* Analytics Dashboard */
 .analytics-dashboard {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -105,7 +105,7 @@ body, html, #root {
   justify-content: center;
 }
 
-/* ===== Report Form ===== */
+/* Report Form */
 .report-form-wrapper {
   background: #f8fafc;
   padding: 1.5rem;
@@ -159,7 +159,7 @@ body, html, #root {
   background: #1e293b;
 }
 
-/* ===== Report List ===== */
+/* Report List */
 .report-list-wrapper {
   background: #ffffff;
   padding: 1.5rem;
@@ -218,13 +218,13 @@ body, html, #root {
   color: #777;
 }
 
-/* ===== Live Map ===== */
+/* Live Map */
 .leaflet-container {
   border-radius: 12px;
   box-shadow: inset 0 0 0 1px #e2e8f0;
 }
 
-/* ===== Admin Login Card ===== */
+/* Admin Login Card */
 .admin-auth-card {
   max-width: 420px;
   width: 100%;
@@ -236,7 +236,6 @@ body, html, #root {
 }
 .admin-auth-card h2 { margin-bottom: 0.75rem; }
 
-/* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .grid-container {
     grid-template-columns: 1fr;
@@ -260,7 +259,7 @@ body, html, #root {
   }
 }
 
-/* ----- Dashboard / card styles (non-Tailwind) ----- */
+/* Dashboard */
 .card {
   background: #ffffff;
   border-radius: 12px;
@@ -358,7 +357,7 @@ body, html, #root {
   color: #475569;
 }
 
-/* Make charts fully responsive */
+//responsive adjustments for charts
 @media (max-width: 640px) {
   .dashboard-grid {
     grid-template-columns: 1fr;

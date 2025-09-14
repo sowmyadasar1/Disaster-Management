@@ -125,7 +125,6 @@ export default function ReportsPage() {
         </>
       )}
 
-      {/* Controls */}
       <div className="controls-container mb-4">
         <input
           type="text"

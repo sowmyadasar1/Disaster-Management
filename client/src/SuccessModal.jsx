@@ -1,4 +1,3 @@
-// src/SuccessModal.jsx
 import React from "react";
 import ResourceGuidance from "./pages/ResourceGuidance";
 import "./App.css";
@@ -20,7 +19,6 @@ export default function SuccessModal({ show, onClose, userLocation }) {
           Your report has been submitted. Here are nearby shelters and guidance while you wait for help.
         </p>
 
-        {/* Full ResourceGuidance UI inside the modal */}
         <div className="modal-guidance-wrapper">
           <ResourceGuidance userLocation={userLocation} />
         </div>

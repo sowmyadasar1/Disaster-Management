@@ -1,4 +1,3 @@
-// server/server.js
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
@@ -7,7 +6,7 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const adminRoutes = require("./routes/adminRoutes");
 const serviceAccount = require('./serviceAccountKey.json');
 
-// ─────────────────── Firebase Admin Initialization ───────────────────
+// Firebase Admin Initialization
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -21,13 +20,12 @@ app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─────────────────── Root Route ───────────────────
+// Root Route
 app.get('/', (req, res) => {
   res.json({ message: 'API is running with Firebase...' });
 });
 
-// ─────────────────── Public Routes ───────────────────
-// Users submit messages (no login required)
+// Public Routes
 app.post('/api/messages', async (req, res) => {
   try {
     const { name, message, location } = req.body;
@@ -48,7 +46,6 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-// Anyone can view recent messages
 app.get('/api/messages', async (req, res) => {
   try {
     const snapshot = await db.collection('messages').orderBy('createdAt', 'desc').get();
@@ -60,8 +57,7 @@ app.get('/api/messages', async (req, res) => {
   }
 });
 
-// ─────────────────── Admin Setup ───────────────────
-// Used once to grant admin rights to a user by email
+// Admin Setup
 app.post('/setAdmin', async (req, res) => {
   try {
     const { email } = req.body;
@@ -77,11 +73,11 @@ app.post('/setAdmin', async (req, res) => {
   }
 });
 
-//------------------ use routes ------------------
+// use routes
 app.use('/api/admin', adminRoutes);
 
-// ─────────────────── Admin-Only Routes ───────────────────
-// Change message status (pending → resolved)
+// Admin-Only Routes
+// Change message status
 app.patch('/api/messages/:id', checkAdmin, async (req, res) => {
   try {
     const { status } = req.body;
@@ -95,7 +91,7 @@ app.patch('/api/messages/:id', checkAdmin, async (req, res) => {
   }
 });
 
-// Delete a message completely
+// Delete a message
 app.delete('/api/messages/:id', checkAdmin, async (req, res) => {
   try {
     await db.collection('messages').doc(req.params.id).delete();
@@ -111,7 +107,7 @@ app.post('/api/admin/task', checkAdmin, (req, res) => {
   res.json({ message: 'This is only for admins.' });
 });
 
-// ─────────────────── Error Handlers ───────────────────
+// Error Handlers
 app.use(notFound);
 app.use(errorHandler);
 

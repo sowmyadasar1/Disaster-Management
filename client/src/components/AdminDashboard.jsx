@@ -61,7 +61,7 @@ export default function AdminDashboard() {
     fetchReports();
   }, []);
 
-  // === Actions ===
+  // Actions
   const handleDelete = async (id) => {
     await deleteDoc(doc(db, "reports", id));
     setReports(reports.filter((r) => r.id !== id));
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
     );
   };
 
-  // === Filtering & Sorting ===
+  // Filtering & Sorting
   const filteredReports = reports
     .filter((r) => {
       if (statusFilter === "all") return true;
@@ -106,8 +106,8 @@ export default function AdminDashboard() {
 
   if (loading) return <p className="text-center mt-8">Loading admin dashboard...</p>;
 
-  // === Progress Bar Calculation ===
-  const totalReports = stats.total || 1; // prevent divide by zero
+  // Progress Bar
+  const totalReports = stats.total || 1; // divide by 0 safeguard
   const pendingPercent = (stats.pending / totalReports) * 100;
   const inProgressPercent = (stats.inProgress / totalReports) * 100;
   const resolvedPercent = (stats.resolved / totalReports) * 100;

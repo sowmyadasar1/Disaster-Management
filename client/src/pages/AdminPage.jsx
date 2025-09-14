@@ -13,7 +13,7 @@ export default function AdminPage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Check Firestore "admins" collection or user role
+        // Check Firestore "admins" collection for admin status
         const ref = doc(db, "admins", currentUser.uid);
         const snapshot = await getDoc(ref);
         if (snapshot.exists()) {
@@ -37,7 +37,6 @@ export default function AdminPage() {
       <div className="page-container">
         <h1 className="section-title">Admin Login</h1>
         <p>Please sign in with your admin account.</p>
-        {/* Replace with your Firebase login UI */}
       </div>
     );
   }

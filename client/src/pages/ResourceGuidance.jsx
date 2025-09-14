@@ -21,7 +21,6 @@ export default function ResourceGuidance() {
         className="carousel slide shadow-lg rounded"
         data-bs-ride="carousel"
       >
-        {/* === Indicators === */}
         <div className="carousel-indicators">
           {steps.map((_, index) => (
             <button
@@ -36,7 +35,6 @@ export default function ResourceGuidance() {
           ))}
         </div>
 
-        {/* === Slides === */}
         <div className="carousel-inner">
           {steps.map((img, index) => (
             <div
@@ -52,7 +50,6 @@ export default function ResourceGuidance() {
           ))}
         </div>
 
-        {/* === Controls === */}
         <button
           className="carousel-control-prev custom-arrow"
           type="button"
@@ -73,7 +70,6 @@ export default function ResourceGuidance() {
         </button>
       </div>
 
-      {/* === Styles === */}
       <style>
         {`
           .resource-guidance-wrapper {

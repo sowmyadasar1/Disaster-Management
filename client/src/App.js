@@ -19,10 +19,9 @@ export default function App() {
 
   return (
     <Router>
-      {/* ===== Navbar ===== */}
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <div className="container-fluid">
-          <NavLink className="navbar-brand" to="/">Disaster Response</NavLink>
+          <NavLink className="navbar-brand" to="/">Disaster Response System</NavLink>
           <button
             className="navbar-toggler"
             type="button"
@@ -35,7 +34,7 @@ export default function App() {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div className="collapse navbar-collapse" id="navbarNav">
+          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul className="navbar-nav nav-underline">
               <li className="nav-item">
                 <NavLink className="nav-link" to="/">Home</NavLink>
@@ -54,7 +53,6 @@ export default function App() {
         </div>
       </nav>
 
-      {/* ===== Routes ===== */}
       <Routes>
         <Route
           path="/"

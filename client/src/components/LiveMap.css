@@ -1,6 +1,4 @@
-/* -------------------------
-   Container + Layout
-------------------------- */
+// Container + Layout
 .live-map-container {
   height: 100%;
   width: 100%;
@@ -19,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  padding: 0.5rem 1rem;    /* spacing inside */
+  padding: 0.5rem 1rem;  
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -32,7 +30,7 @@
 }
 
 .live-map-wrapper {
-  height: 600px; /* Adjustable height */
+  height: 600px;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
@@ -43,9 +41,7 @@
   position: relative;
 }
 
-/* -------------------------
-   Map Placeholder
-------------------------- */
+// Map Placeholder
 .map-placeholder {
   color: #6b7280;
   font-size: 1rem;
@@ -53,9 +49,7 @@
   text-align: center;
 }
 
-/* -------------------------
-   Leaflet Overrides
-------------------------- */
+// Leaflet Overrides
 .leaflet-container {
   width: 100%;
   height: 100%;
@@ -82,23 +76,19 @@
   color: #374151;
 }
 
-/* Remove the default marker shadow */
 .leaflet-marker-icon,
 .leaflet-marker-shadow {
   box-shadow: none !important;
 }
 
 
-/* Hover grow effect for markers */
 .leaflet-marker-icon:hover {
   transform: scale(1.15);
   transition: transform 0.15s ease-in-out;
   z-index: 999 !important;
 }
 
-/* -------------------------
-   Responsive Design
-------------------------- */
+// Responsive Design
 @media (max-width: 640px) {
   .live-map-container {
     padding: 1rem;

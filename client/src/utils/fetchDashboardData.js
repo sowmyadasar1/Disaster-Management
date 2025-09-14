@@ -1,4 +1,3 @@
-// src/utils/fetchDashboardData.js
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { app } from "../firebase";
 
@@ -6,9 +5,7 @@ const db = getFirestore(app);
 
 function toDateMaybe(value) {
   if (!value) return null;
-  // Firestore Timestamp object has toDate()
   if (typeof value?.toDate === "function") return value.toDate();
-  // ISO date string or number
   const parsed = new Date(value);
   if (!isNaN(parsed)) return parsed;
   return null;
@@ -21,7 +18,6 @@ export async function fetchDashboardData() {
     const reports = [];
     snapshot.forEach(doc => {
       const d = doc.data();
-      // include id if needed
       reports.push({ id: doc.id, ...d });
     });
 
@@ -52,7 +48,6 @@ export async function fetchDashboardData() {
     const locationCount = {};
     reports.forEach(r => {
       const loc = (r.location || "").toString();
-      // try to parse last comma-separated part as state
       const parts = loc.split(",").map(s => s.trim()).filter(Boolean);
       const state = parts.length > 0 ? parts[parts.length - 1] : loc || "Unknown";
       locationCount[state] = (locationCount[state] || 0) + 1;

@@ -98,7 +98,6 @@
   font-size: 0.9rem;
 }
 
-/* make edit fields comfortable */
 .report-card textarea {
   width: 100% !important;
   min-height: 120px !important;
@@ -114,12 +113,10 @@
   padding: 8px;
 }
 
-/* ensure controls layout keeps buttons readable */
 .controls-container .control-button {
   white-space: nowrap;
 }
 
-/* optional: give report card a little more padding so large fields don't feel cramped */
 .report-card {
   padding: 14px;
 }

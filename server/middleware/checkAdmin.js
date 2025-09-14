@@ -1,7 +1,5 @@
-// server/middleware/checkAdmin.js
 const admin = require('firebase-admin');
 
-// Ensure Firebase Admin was initialized in server.js
 function ensureAdminInitialized() {
   if (!admin.apps.length) {
     throw new Error(
@@ -24,12 +22,12 @@ module.exports = async function checkAdmin(req, res, next) {
       return res.status(401).json({ message: 'Authorization token missing' });
     }
 
-    // Verify token using Firebase Admin
+    // Verify token
     const decodedToken = await admin.auth().verifyIdToken(token);
 
     // Check custom claim
     if (decodedToken.admin === true) {
-      req.user = decodedToken; // attach token info if needed later
+      req.user = decodedToken;
       return next();
     } else {
       return res.status(403).json({ message: 'Access denied. Admins only.' });

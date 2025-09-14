@@ -10,7 +10,7 @@ export default function ReportIncident() {
 
   const handleCloseModal = () => {
     setShowSuccess(false);
-    // Navigate to Resource Guidance after closing modal
+    // Navigate to Resource Guidance page
     navigate("/resource-guidance");
   };
 

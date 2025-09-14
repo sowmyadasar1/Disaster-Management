@@ -1,4 +1,3 @@
-// src/components/AnalyticsDashboard.jsx
 import React, { useEffect, useState } from "react";
 import {
   PieChart,
@@ -66,7 +65,7 @@ export default function AnalyticsDashboard({ title = "Analytics Dashboard", refr
     };
   }, [refreshKey]);
 
-  // Helpful debug output (open browser console)
+  // Helpful debug output
   useEffect(() => {
     console.log("Analytics dashboard data:", data);
   }, [data]);
@@ -96,7 +95,7 @@ export default function AnalyticsDashboard({ title = "Analytics Dashboard", refr
       </div>
 
       <div className="dashboard-grid">
-        {/* Card 1: Donut */}
+        {/* Card 1: Res vs Pending */}
         <Card title="Resolved vs Pending" subtitle={`Total: ${totalReports}`}>
           <div className="chart-area">
             <ResponsiveContainer width="100%" height="100%">
@@ -137,7 +136,7 @@ export default function AnalyticsDashboard({ title = "Analytics Dashboard", refr
           </div>
         </Card>
 
-        {/* Card 2: Vertical bar */}
+        {/* Card 2: Top disasters by number */}
         <Card title="Top Disasters" subtitle="by number of cases">
           <div className="chart-area">
             <ResponsiveContainer width="100%" height="100%">
@@ -167,7 +166,7 @@ export default function AnalyticsDashboard({ title = "Analytics Dashboard", refr
           </div>
         </Card>
 
-        {/* Card 3: Horizontal states */}
+        {/* Card 3: Top disasters by states */}
         <Card title="Most Affected States" subtitle="Share of total (%)">
           <div className="chart-area">
             <ResponsiveContainer width="100%" height="100%">
@@ -225,7 +224,6 @@ export default function AnalyticsDashboard({ title = "Analytics Dashboard", refr
   );
 }
 
-/* Reusable Card */
 function Card({ title, subtitle, children }) {
   return (
     <div className="card">
