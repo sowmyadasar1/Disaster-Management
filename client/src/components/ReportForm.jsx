@@ -36,7 +36,6 @@ export default function ReportForm({ onSuccess }) {
   const [phoneInvalid, setPhoneInvalid] = useState(false);
   const [locationInvalid, setLocationInvalid] = useState(false);
   const [fullNameInvalid, setFullNameInvalid] = useState(false);
-  const [descriptionInvalid, setDescriptionInvalid] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -66,18 +65,14 @@ export default function ReportForm({ onSuccess }) {
     } else if (name === "location") {
       setFormData((p) => ({ ...p, location: value }));
       setLocationInvalid(value && !validateLocationFormat(value));
-      // Warn if contains numbers or special characters besides commas/spaces
       const invalidChars = /[^a-zA-Z,\s]/.test(value);
       if (invalidChars) setErrorMsg("Location should only contain alphabets, commas, and spaces.");
     } else if (name === "fullName") {
       setFormData((p) => ({ ...p, fullName: value }));
       const invalidChars = /[^a-zA-Z\s]/.test(value);
       setFullNameInvalid(invalidChars);
-    } else if (name === "description") {
-      setFormData((p) => ({ ...p, description: value }));
-      const invalidChars = /[^a-zA-Z\s.,]/.test(value);
-      setDescriptionInvalid(invalidChars);
     } else {
+      // Description field has no validation
       setFormData((p) => ({ ...p, [name]: value }));
     }
   };
@@ -135,7 +130,7 @@ export default function ReportForm({ onSuccess }) {
       setErrorMsg("Please fill all fields marked with *.");
       return false;
     }
-    if (phoneInvalid || locationInvalid || fullNameInvalid || descriptionInvalid) {
+    if (phoneInvalid || locationInvalid || fullNameInvalid) {
       setErrorMsg("Please correct invalid fields.");
       return false;
     }
@@ -233,7 +228,6 @@ export default function ReportForm({ onSuccess }) {
     setPhoneInvalid(false);
     setLocationInvalid(false);
     setFullNameInvalid(false);
-    setDescriptionInvalid(false);
     if (window.recaptchaVerifier?.clear) window.recaptchaVerifier.clear();
     window.recaptchaVerifier = null;
     recaptchaReady.current = false;
@@ -306,15 +300,10 @@ export default function ReportForm({ onSuccess }) {
             <textarea
               name="description"
               rows={4}
-              className={`form-control ${descriptionInvalid ? "is-invalid" : ""}`}
+              className="form-control"
               value={formData.description}
               onChange={handleChange}
             />
-            {descriptionInvalid && (
-              <div className="invalid-feedback">
-                Description should only contain alphabets, spaces, periods, or commas.
-              </div>
-            )}
           </div>
 
           <div className="mb-3">
