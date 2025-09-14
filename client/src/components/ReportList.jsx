@@ -79,8 +79,12 @@ const ReportList = ({ limit = 3 }) => {
               borderRadius: "14px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               background: "#fff",
+              position: "relative",
             }}
           >
+            {report.flagged && (
+              <div className="flagged-banner">⚠️ Flagged for Review</div>
+            )}
             <div
               style={{
                 display: "flex",

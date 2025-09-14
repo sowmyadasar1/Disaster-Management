@@ -30,7 +30,6 @@ const createMarkerIcon = (color) =>
     popupAnchor: [0, -9],
   });
 
-// Recenter map to route & markers
 function RecenterMap({ routeCoords, userLocation, shelter }) {
   const map = useMap();
   useEffect(() => {
@@ -46,12 +45,11 @@ function RecenterMap({ routeCoords, userLocation, shelter }) {
   return null;
 }
 
-// Reset map to default view
 function ResetMap({ showLiveMap }) {
   const map = useMap();
   useEffect(() => {
     if (showLiveMap) {
-      map.setView([20.5937, 78.9629], 5); // Center on India
+      map.setView([20.5937, 78.9629], 5);
     }
   }, [showLiveMap, map]);
   return null;
@@ -65,7 +63,6 @@ export default function LiveMap() {
   const [nearestShelter, setNearestShelter] = useState(null);
   const [routeCoords, setRouteCoords] = useState([]);
 
-  // Load incident reports
   useEffect(() => {
     const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -75,7 +72,6 @@ export default function LiveMap() {
     return () => unsubscribe();
   }, []);
 
-  // Load shelters when needed
   useEffect(() => {
     if (showShelters) {
       const q = collection(db, "shelters");
@@ -92,7 +88,6 @@ export default function LiveMap() {
     }
   }, [showShelters]);
 
-  // Status colors
   const getStatusColor = (status) => {
     switch (status) {
       case "pending": return "#e63946";
@@ -102,7 +97,6 @@ export default function LiveMap() {
     }
   };
 
-  // Find nearest shelter
   const findNearestShelter = (lat, lng, sheltersList) => {
     if (!sheltersList.length) return null;
     let nearest = null;
@@ -119,7 +113,6 @@ export default function LiveMap() {
     return nearest;
   };
 
-  // Fetch route
   const fetchRoute = async (start, end) => {
     try {
       const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?geometries=geojson`;
@@ -135,10 +128,8 @@ export default function LiveMap() {
     }
   };
 
-  // Toggle incidents <-> shelters
   const handleToggleMap = () => {
     if (!showShelters) {
-      // Show nearest shelters
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
@@ -152,14 +143,12 @@ export default function LiveMap() {
         );
       } else alert("Geolocation not supported");
     } else {
-      // Back to live map
       setShowShelters(false);
       setNearestShelter(null);
       setRouteCoords([]);
     }
   };
 
-  // Update nearest shelter and route
   useEffect(() => {
     if (userLocation && shelters.length > 0) {
       const nearest = findNearestShelter(userLocation[0], userLocation[1], shelters);
@@ -170,24 +159,29 @@ export default function LiveMap() {
 
   return (
     <div className="live-map-container">
-      <div className="live-map-header">
+      <div className="live-map-header d-flex justify-content-between align-items-center mb-3">
         <h2 className="live-map-title">
           {showShelters ? "Find Nearest Locations" : "Live Incident Map"}
         </h2>
-        <button
-          onClick={handleToggleMap}
-          style={{
-            padding: "8px 14px",
-            background: showShelters ? "#6c757d" : "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "600",
-          }}
-        >
-          {showShelters ? "Back to Live Map" : "Find Nearest Locations"}
-        </button>
+        <div>
+          {!showShelters ? (
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={handleToggleMap}
+            >
+              Find Nearest Locations
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={handleToggleMap}
+            >
+              Back to Live Map
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="live-map-wrapper">
@@ -201,11 +195,8 @@ export default function LiveMap() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-
-          {/* Reset map to India when showing live map */}
           {!showShelters && <ResetMap showLiveMap={!showShelters} />}
 
-          {/* Incident Reports */}
           {!showShelters &&
             reports.map(
               (r) =>
@@ -227,7 +218,6 @@ export default function LiveMap() {
                 )
             )}
 
-          {/* Nearest Shelter View */}
           {showShelters && (
             <>
               {userLocation && (
@@ -235,7 +225,6 @@ export default function LiveMap() {
                   <Popup><strong>Your Location</strong></Popup>
                 </Marker>
               )}
-
               {nearestShelter && (
                 <Marker
                   position={[nearestShelter.lat, nearestShelter.lng]}
@@ -253,7 +242,6 @@ export default function LiveMap() {
                   </Popup>
                 </Marker>
               )}
-
               {routeCoords.length > 0 && (
                 <>
                   <Polyline positions={routeCoords} color="blue" weight={5} opacity={0.8} />

@@ -10,14 +10,13 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { FaFlag, FaTrash, FaEdit, FaCheck, FaSpinner } from "react-icons/fa";
-import "../pages/ReportsPage.css"; // reuse styling
+import "../pages/ReportsPage.css";
 
 export default function AdminDashboard() {
   const [reports, setReports] = useState([]);
   const [selectedReports, setSelectedReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Quick analytics
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -26,17 +25,13 @@ export default function AdminDashboard() {
     flagged: 0,
   });
 
-  // Filter & Sort states
-  const [statusFilter, setStatusFilter] = useState("all"); // all | pending | in-progress | resolved | flagged
-  const [sortBy, setSortBy] = useState("createdAt"); // createdAt | reporter
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("createdAt");
 
   useEffect(() => {
     async function fetchReports() {
       try {
-        const q = query(
-          collection(db, "reports"),
-          orderBy("createdAt", "desc")
-        );
+        const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
         const reportData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -44,15 +39,11 @@ export default function AdminDashboard() {
         }));
         setReports(reportData);
 
-        // Compute stats
         const pending = reportData.filter((r) => r.status === "pending").length;
-        const inProgress = reportData.filter(
-          (r) => r.status === "in-progress"
-        ).length;
-        const resolved = reportData.filter(
-          (r) => r.status === "resolved"
-        ).length;
+        const inProgress = reportData.filter((r) => r.status === "in-progress").length;
+        const resolved = reportData.filter((r) => r.status === "resolved").length;
         const flagged = reportData.filter((r) => r.flagged).length;
+
         setStats({
           total: reportData.length,
           pending,
@@ -108,57 +99,92 @@ export default function AdminDashboard() {
       return r.status === statusFilter;
     })
     .sort((a, b) => {
-      if (sortBy === "reporter") {
-        return (a.fullName || "").localeCompare(b.fullName || "");
-      }
-      if (sortBy === "createdAt") {
-        return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
-      }
+      if (sortBy === "reporter") return (a.fullName || "").localeCompare(b.fullName || "");
+      if (sortBy === "createdAt") return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
       return 0;
     });
 
-  if (loading)
-    return <p className="text-center mt-8">Loading admin dashboard...</p>;
+  if (loading) return <p className="text-center mt-8">Loading admin dashboard...</p>;
+
+  // === Progress Bar Calculation ===
+  const totalReports = stats.total || 1; // prevent divide by zero
+  const pendingPercent = (stats.pending / totalReports) * 100;
+  const inProgressPercent = (stats.inProgress / totalReports) * 100;
+  const resolvedPercent = (stats.resolved / totalReports) * 100;
 
   return (
     <div className="page-container">
       <h1 className="section-title">Admin Dashboard</h1>
 
       {/* Quick Stats */}
-      <div
-        className="controls-container"
-        style={{ justifyContent: "space-around" }}
-      >
+      <div className="controls-container" style={{ justifyContent: "space-between", flexWrap: "wrap", marginBottom: "20px" }}>
         <div>
-          <strong>Total:</strong> {stats.total}
-        </div>
-        <div>
-          <strong>Pending:</strong> {stats.pending}
-        </div>
-        <div>
-          <strong>In Progress:</strong> {stats.inProgress}
-        </div>
-        <div>
-          <strong>Resolved:</strong> {stats.resolved}
+          <strong>Total Reports:</strong> {stats.total}
         </div>
         <div>
           <strong>Flagged:</strong> {stats.flagged}
         </div>
       </div>
 
+      {/* Status Progress Bar with Labels */}
+      <div style={{ width: "100%", background: "#eee", borderRadius: "8px", overflow: "hidden", marginBottom: "20px", height: "32px", display: "flex", position: "relative" }}>
+        {pendingPercent > 0 && (
+          <div
+            style={{
+              width: `${pendingPercent}%`,
+              background: "red",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+            }}
+          >
+            Pending: {stats.pending}
+          </div>
+        )}
+        {inProgressPercent > 0 && (
+          <div
+            style={{
+              width: `${inProgressPercent}%`,
+              background: "goldenrod",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+            }}
+          >
+            In Progress: {stats.inProgress}
+          </div>
+        )}
+        {resolvedPercent > 0 && (
+          <div
+            style={{
+              width: `${resolvedPercent}%`,
+              background: "green",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+            }}
+          >
+            Resolved: {stats.resolved}
+          </div>
+        )}
+      </div>
+
       {/* Filters & Sort */}
-      <div
-        className="controls-container"
-        style={{ marginTop: "15px", gap: "20px" }}
-      >
+      <div className="controls-container" style={{ marginBottom: "15px", gap: "20px" }}>
         <div>
           <label>
             <strong>Filter by status:</strong>{" "}
           </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="in-progress">In Progress</option>
@@ -179,14 +205,12 @@ export default function AdminDashboard() {
 
       {/* Bulk Actions */}
       {selectedReports.length > 0 && (
-        <div className="controls-container">
-          <button onClick={bulkDelete} className="control-button">
-            🗑️ Delete Selected
-          </button>
+        <div className="controls-container" style={{ marginBottom: "15px" }}>
+          <button onClick={bulkDelete} className="control-button">🗑️ Delete Selected</button>
         </div>
       )}
 
-      {/* Reports */}
+      {/* Reports Grid */}
       <div className="reports-grid">
         {filteredReports.map((report) => (
           <div key={report.id} className="report-card">
@@ -194,13 +218,8 @@ export default function AdminDashboard() {
               type="checkbox"
               checked={selectedReports.includes(report.id)}
               onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedReports([...selectedReports, report.id]);
-                } else {
-                  setSelectedReports(
-                    selectedReports.filter((id) => id !== report.id)
-                  );
-                }
+                if (e.target.checked) setSelectedReports([...selectedReports, report.id]);
+                else setSelectedReports(selectedReports.filter((id) => id !== report.id));
               }}
             />
 
@@ -217,69 +236,33 @@ export default function AdminDashboard() {
                       : report.status === "pending"
                       ? "red"
                       : "black",
-                  fontWeight: "600",
+                  fontWeight: 600,
                 }}
               >
                 {report.status}
               </span>
             </p>
-            <p>
-              <strong>Location:</strong> {report.location}
-            </p>
-            <p>
-              <strong>Reporter:</strong> {report.fullName}
-            </p>
-            {report.description && (
-              <p>
-                <strong>Description:</strong> {report.description}
-              </p>
-            )}
-            {report.contact && (
-              <p>
-                <strong>Contact:</strong> {report.contact}
-              </p>
-            )}
-            {report.createdAt && (
-              <p>
-                <strong>Date:</strong>{" "}
-                {new Date(report.createdAt.seconds * 1000).toLocaleString()}
-              </p>
-            )}
+            <p><strong>Location:</strong> {report.location}</p>
+            <p><strong>Reporter:</strong> {report.fullName}</p>
+            {report.description && <p><strong>Description:</strong> {report.description}</p>}
+            {report.contact && <p><strong>Contact:</strong> {report.contact}</p>}
+            {report.createdAt && <p><strong>Date:</strong> {new Date(report.createdAt.seconds * 1000).toLocaleString()}</p>}
 
             {/* Admin Controls */}
-            <div
-              className="controls-container"
-              style={{ marginTop: "10px", gap: "10px" }}
-            >
-              <button
-                onClick={() => toggleFlag(report.id, report.flagged)}
-                className="control-button"
-              >
-                <FaFlag color={report.flagged ? "red" : "grey"} />{" "}
-                {report.flagged ? "Unflag" : "Flag"}
+            <div className="controls-container" style={{ marginTop: "10px", gap: "10px", flexWrap: "wrap" }}>
+              <button onClick={() => toggleFlag(report.id, report.flagged)} className="control-button">
+                <FaFlag color={report.flagged ? "red" : "grey"} /> {report.flagged ? "Unflag" : "Flag"}
               </button>
-              <button
-                onClick={() => updateStatus(report.id, "in-progress")}
-                className="control-button"
-              >
+              <button onClick={() => updateStatus(report.id, "in-progress")} className="control-button">
                 <FaSpinner /> Mark In Progress
               </button>
-              <button
-                onClick={() => updateStatus(report.id, "resolved")}
-                className="control-button"
-              >
+              <button onClick={() => updateStatus(report.id, "resolved")} className="control-button">
                 <FaCheck /> Mark Resolved
               </button>
-              <button
-                onClick={() => alert("Edit feature coming soon")}
-                className="control-button"
-              >
+              <button onClick={() => alert("Edit feature coming soon")} className="control-button">
                 <FaEdit /> Edit
               </button>
-              <button
-                onClick={() => handleDelete(report.id)}
-                className="control-button"
-              >
+              <button onClick={() => handleDelete(report.id)} className="control-button">
                 <FaTrash /> Delete
               </button>
             </div>
