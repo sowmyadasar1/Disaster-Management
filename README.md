@@ -70,10 +70,15 @@ disaster-response-system/
 ### Home Page
 Displays the report form, analytics dashboard, live map, and recent reports.
 ![Home Page](screenshots/home.png)
-
-### Live Incident Map
-Shows real-time disaster reports with status-based markers.
+![ReportForm Validation](screenshots/form-validation.png)
+![Form Submission](screenshots/form-submit.png)
+![Analtics Dashboard](screenshots/analysis.png)
 ![Live Map](screenshots/live-map.png)
+
+### Admin Dashboard
+Admin panel for managing reports, analytics, and system insights.
+![Admin Login](screenshots/admin-login.png)
+![Admin Dashboard](screenshots/admin-dashboard.png)
 
 ### Reports Page
 View all disaster reports with filters, sorting, and flagged reports.
@@ -82,10 +87,8 @@ View all disaster reports with filters, sorting, and flagged reports.
 ### Resource Guidance
 Provides recommended resources and guidance for affected areas.
 ![Resource Guidance](screenshots/resource-guidance.png)
+![Resource Guidance: Flood](screenshots/flood.png)
 
-### Admin Dashboard
-Admin panel for managing reports, analytics, and system insights.
-![Admin Dashboard](screenshots/admin-dashboard.png)
 
 
 
