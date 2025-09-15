@@ -13,7 +13,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./LiveMap.css";
 
-// custom color marker icon
+// Marker creator with custom color
 const createMarkerIcon = (color) =>
   L.divIcon({
     className: "custom-marker",
