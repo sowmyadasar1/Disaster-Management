@@ -70,6 +70,8 @@ disaster-response-system/
 ### Home Page
 Displays the report form, analytics dashboard, live map, and recent reports.
 ![Home Page](screenshots/home.png)
+![Live Map](screenshots/live-map.png)
+
 
 ReportForm Validation
 ![ReportForm Validation](screenshots/form-validation.png)
@@ -77,11 +79,13 @@ ReportForm Validation
 Form Submission    
 ![Form Submission](screenshots/form-submit.png)
 
-Analtics Dashboard
-![Analtics Dashboard](screenshots/analysis.png)
+Analytics Dashboard
+![Analytics Dashboard](screenshots/analysis.png)
 
 Live Map
 ![Live Map](screenshots/live-map.png)
+Finding nearest shelter from User's Location
+![nearest-shelter](screenshots/nearest-shelter.png)
 
 
 ### Admin Dashboard
